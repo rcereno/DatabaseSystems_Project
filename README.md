@@ -1,4 +1,4 @@
-# DatabaseSystems_Project
+# REDX
 
 Contributors:
 - Xia Webster xwebster@calpoly.edu
