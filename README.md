@@ -3,7 +3,7 @@
 Contributors:
 - Xia Webster xwebster@calpoly.edu
 - Rhoyalinn Cereno rcereno@calpoly.edu
-- Emanual Gonzales egonz279@calpoly.edu
+- Emanual Gonzalez egonz279@calpoly.edu
 - Dre Suguitan fsuguita@calpoly.edu
 
 Proposal:
