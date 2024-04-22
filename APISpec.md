@@ -53,7 +53,7 @@ Creates a new cart for a specific customer.
 }
 ``` 
 
-### 3. Add Item to Cart - `/carts/{cart_id}/games/{item_sku}` (PUT)
+### 3. Add Item to Cart - `/carts/{cart_id}/{item_sku}` (PUT)
 
 Updates a specific game in a cart. Will update their cart in the cart_items table with the game they've added.
 
