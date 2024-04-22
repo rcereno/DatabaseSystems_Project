@@ -40,10 +40,14 @@ Add to Wishlist
 Endpoint: PUT /ET_LEG123/wishlist/456
 
 
+
+
 {
     "customer_name": "LisaR",
     "account_id": 456
 }
+
+
 
 RESPONSE
 {
@@ -58,11 +62,18 @@ keeps track of my owned games, wishlist, cart, billing (and other customer info)
 Scenario: Mark wants to check the details of his account, including 
 his owned games and items on his wishlist.
 
+
+
 {
     "customer_name": "MarkD",
     "account_id": 789
 }
+
+
+
 RESPONSE
+
+
 
 {
     "customer_name": "MarkD",
