@@ -15,7 +15,7 @@ The API's:
 
 ### 1. Get Catalog - `/catalog/` (GET)
 
-Retrieves the catalog of items. Each unique item combination should have only a single price. You can have at most 6 potion SKUs offered in your catalog at one time.
+Retrieves the catalog of items. Each unique item combination should have only a single price. 
 
 **Response**:
 
@@ -89,13 +89,13 @@ Handles the checkout process for a specific cart.
 }
 ```
 
-### 6. Search games in catalog - `/catalog/search/` (GET)
+### 6. Search Games in Catalog - `/catalog/search/` (GET)
 Searches for games based on specified query parameters.
 
 **Query Parameters**:
 
 - `customer_name` (optional): The name of the customer.
-- `game_sku` (optional): The SKU of the potion.
+- `game_sku` (optional): The SKU of the game.
 - `search_page` (optional): The page number of the search results.
 - `sort_col` (optional): The column to sort the results by. Possible values: `game_name`, `price`, `publisher`, `platform`, `mode_review`, `genre`, `release_date`. Default: `release_date`.
 - `sort_games` (optional): The sort order of the results. Possible values: `asc` (ascending), `desc` (descending). Default: `desc`.
@@ -227,6 +227,27 @@ Return a summary of your current number of games and total shop's money.
   "number_of_games: "number",
   "money": "number"
 )
-```  
+```
+
+
+### 9. Review game - '/games/{game_id}/reviews' (PUT)
+
+Add review of up to five stars into a game's review data.
+
+**Request:**
+```json
+{
+  "game_id": "integer",
+  "account_id": "integer",
+  "review": "integer"  /*1-5 for 5 stars*/
+}
+```
+
+**Response:**
+```json
+{
+  "success" : "boolean"
+)
+```
 
 
