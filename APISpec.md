@@ -12,7 +12,7 @@ The API's:
 7. `Account view`
 8. `Add to wish list`
 
-### 1.1. Get Catalog - `/catalog/` (GET)
+### 1. Get Catalog - `/catalog/` (GET)
 
 Retrieves the catalog of items. Each unique item combination should have only a single price. You can have at most 6 potion SKUs offered in your catalog at one time.
 
@@ -23,42 +23,15 @@ Retrieves the catalog of items. Each unique item combination should have only a 
     {
         "sku": "string", /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */
         "name": "string",
-        "quantity": "integer", /* Between 1 and 10000 */
+        "publisher": "string",
         "price": "integer", /* Between 1 and 500 */
-        "potion_type": [r, g, b, d] /* r, g, b, d are integers that add up to exactly 100 */
+        "genre": "string",
+        "platform": "string",
+        "mode_review": "integer" /*between 1-5 for 1-5 stars*/
     }
 ]
 ```
-
-### 1.2. Visits - `/carts/visits/{visit_id}` (POST)
-
-Shares the customers that visited the store on that tick. Not all
-customers end up purchasing because they may not like what they see
-in the current catalog.
-
-**Request**:
-
-```json
-[
-  {
-    "customer_name": "string",
-    "character_class": "string",
-    "level": "number"
-  },
-  {
-    ...
-  }
-]
-```
-**Response**:
-
-```json
-{
-    "success": "boolean"
-}
-```
-
-### 1.3. New Cart - `/carts/` (POST)
+### 2. New Cart - `/carts/` (POST)
 
 Creates a new cart for a specific customer.
 
@@ -67,8 +40,7 @@ Creates a new cart for a specific customer.
 ```json
 {
   "customer_name": "string",
-  "character_class": "string",
-  "level": "number"
+  "account_id": "integer"
 }
 ```
 
@@ -80,17 +52,12 @@ Creates a new cart for a specific customer.
 }
 ``` 
 
-### 1.4. Add Item to Cart - `/carts/{cart_id}/items/{item_sku}` (PUT)
+### 3. Add Item to Cart - `/carts/{cart_id}/games/{item_sku}` (PUT)
 
-Updates the quantity of a specific item in a cart. 
+Updates a specific game in a cart. Will update their cart in the cart_items table with the game they've added.
 
 **Request**:
 
-```json
-{
-  "quantity": "integer"
-}
-```
 
 **Response**:
 
@@ -100,7 +67,7 @@ Updates the quantity of a specific item in a cart.
 }
 ```
 
-### 1.5. Checkout Cart - `/carts/{cart_id}/checkout` (POST)
+### 4. Checkout Cart - `/carts/{cart_id}/checkout` (POST)
 
 Handles the checkout process for a specific cart.
 
@@ -116,21 +83,21 @@ Handles the checkout process for a specific cart.
 
 ```json
 {
-    "total_potions_bought": "integer",
-    "total_gold_paid": "integer"
+    "games_bought": "integer",
+    "total_price": "integer"
 }
 ```
 
-### 1.6. Search orders - `/carts/search/` (GET)
-Searches for orders based on specified query parameters.
+### 6. Search games in catalog - `/catalog/search/` (GET)
+Searches for games based on specified query parameters.
 
 **Query Parameters**:
 
 - `customer_name` (optional): The name of the customer.
-- `potion_sku` (optional): The SKU of the potion.
+- `game_sku` (optional): The SKU of the potion.
 - `search_page` (optional): The page number of the search results.
-- `sort_col` (optional): The column to sort the results by. Possible values: `customer_name`, `item_sku`, `line_item_total`, `timestamp`. Default: `timestamp`.
-- `sort_order` (optional): The sort order of the results. Possible values: `asc` (ascending), `desc` (descending). Default: `desc`.
+- `sort_col` (optional): The column to sort the results by. Possible values: `game_name`, `price`, `publisher`, `platform`, `mode_review`, `genre`, `release_date`. Default: `release_date`.
+- `sort_games` (optional): The sort order of the results. Possible values: `asc` (ascending), `desc` (descending). Default: `desc`.
 
 **Response**:
 
@@ -140,102 +107,86 @@ The API returns a JSON object with the following structure:
 - `next`: A string that represents the link to the next page of results. If there is no next page, this value is an empty string.
 - `results`: An array of objects, each representing a line item. Each line item object has the following properties:
     - `line_item_id`: An integer that represents the unique identifier of the line item.
-    - `item_sku`: A string that represents the SKU of the item. This includes the quantity and the name of the item.
-    - `customer_name`: A string that represents the name of the customer who purchased the item.
-    - `line_item_total`: An integer that represents the total cost of the line item.
-    - `timestamp`: A string that represents the date and time when the line item was created. This is in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).
-
-
-## 2. Bottling
-
-The API calls are made in this sequence when the bottler comes:
-1. `Get Bottle Plan`
-2. `Deliver Bottles`
-
-### 2.1. Get Bottle Plan - `/bottler/plan` (POST)
-
-Gets the plan for bottling potions.
-
-**Response**:
-
-```json
-[
-    {
-        "potion_type": [r, g, b, d],
-        "quantity": "integer"
-    }
-]
-```
-
-### 2.2. Deliver Bottles - `/bottler/deliver/{order_id}` (POST)
-
-Posts delivery of potions. order_id is a unique value representing
-a single delivery. 
+    - `game_sku`: A string that represents the SKU of the game. 
+    - `price`: An integer representing the price of the game
+    - `publisher`: A string that represents the publisher of the game
+    - `platform`: A string that represents the platform the game is available on.
+    - `mode_review`: A number representing the most frequently given star review.
+    - `genre`: A string representing the genre of the game. 
+    - `release_date`: A string that represents the date and time when the game was released. This is in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).
+  
+### 7. Account Management
+### 7.1 Account Registration - `/register/{account_id}` (POST)
+A call customers can make to register their account. 
 
 **Request**:
 
 ```json
-[
-  {
-    "potion_type": [r, g, b, d],
-    "quantity": "integer"
-  }
-]
+{
+  "customer_name": "string",
+  "account_id": "integer"
+}
 ```
 
-## 3. Barrel Purchases
-
-The API calls are made in this sequence when Barrel Purchases can be made:
-1. `Get Barrel Purchase Plan`
-2. `Deliver Barrels`
-
-### 3.1. Get Barrel Purchase Plan - `/barrels/plan` (POST)
-
-Gets the plan for purchasing wholesale barrels. The call passes in a catalog of available barrels
-and the shop returns back which barrels they'd like to purchase and how many.
-
+**Response**
+```json
+{
+  "success": "boolean"
+}
+```
+### 7.2 Account View- `/view_account/{account_id}` (GET)
 **Request**:
 
 ```json
-[
-  {
-    "sku": "string",
-    "ml_per_barrel": "integer",
-    "potion_type": "integer",
-    "price": "integer",
-    "quantity": "integer"
-  }
-]
+{
+  "customer_name": "string",
+  "account_id": "integer"
+}
 ```
-
-**Response**:
-
+**Reponse**
 ```json
-[
-    {
-        "sku": "string", /* Must match a sku from the catalog just passed in this call */
-        "quantity": "integer" /* A number between 1 and the quantity available for sale */
-    }
-]
+{
+    "customer_name": "string",
+    "games_owned": ["string"]  /*an array of strings representing the names of games that the customer owns*/
+    "wishlist": ["string"]  /*an array of strings representing the names of games that the customer wants*/
+    "current_cart": "integer" /*an integer representing the cart_id of their current cart, if one exists*/
+}
 ```
 
-### 3.2. Deliver Barrels - `/barrels/deliver/{order_id}` (POST)
-
-Posts delivery of barrels. order_id is a unique value representing
-a single delivery.
-
+### 7.3 Cart View- `/{account_id}/carts/{cart_id}` (GET)
+An API call that lets customers view their current cart, if one exists.
 **Request**:
 
 ```json
-[
-  {
-    "sku": "string",
-    "ml_per_barrel": "integer",
-    "potion_type": "integer",
-    "price": "integer",
-    "quantity": "integer"
-  }
-]
+{
+  "customer_name": "string",
+  "account_id": "integer"
+}
+```
+**Reponse**
+```json
+{
+    "cart_id": "integer" /*an integer representing the cart_id of the cart, if one exists*/
+    "customer_name": "string",
+    "games_in_cart": ["string"]  /*an array of strings representing the names of games that the customer has in their cart*/
+    "total_cost": "integer" /*an integer representing the cost of their total cart*/
+}
+```
+### 8. Add to wishlist- `/{item_sku}/wishlist/{account_id}` (PUT)
+An API call that allows a customer to add a specific game to their account wishlist.
+**Request**:
+
+```json
+{
+  "customer_name": "string",
+  "account_id": "integer"
+}
+```
+**Reponse**
+```json
+{
+    "success" : "boolean"
+}
 ```
 
 ### 4. Admin Functions
@@ -267,39 +218,14 @@ Shares what the latest time (in game time) is.
 
 ### 6.1. Get Inventory Summary - `/inventory/audit` (GET)
 
-Return a summary of your current number of potions, ml, and gold.
+Return a summary of your current number of games and total shop's money.
 
 **Response**:
 ```json
 {
-  "number_of_potions": "number",
-  "ml_in_barrels": "number",
-  "gold": "number"
+  "number_of_games: "number",
+  "money": "number"
 )
 ```  
 
-### 6.2 Get capacity purchase plan - `/inventory/plan` (POST)
 
-What additional potion or ML capacity the shop would like to buy. Called once a day.
-You start with 1 capacity of potion and 1 capacity of ml storage. Each potion capacity
-allows 50 potion storage. Each ml capacity allows 10k of ml storage.
-
-**Response**:
-```json
-{
-  "potion_capacity": "number",
-  "ml_capacity": "number"
-}
-```
-
-### 6.3 Deliver capacity purchased - `/inventory/deliver` (POST)
-
-Delivers capacity purchased back to shop. Called when a capacity purchase succeeds.
-
-**Request**:
-```json
-{
-  "potion_capacity": "number",
-  "ml_capacity": "number"
-}
-```
