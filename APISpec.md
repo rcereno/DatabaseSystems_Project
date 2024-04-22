@@ -11,6 +11,7 @@ The API's:
 6. `catalog search`
 7. `Account view`
 8. `Add to wish list`
+9. `Review game`
 
 ### 1. Get Catalog - `/catalog/` (GET)
 
