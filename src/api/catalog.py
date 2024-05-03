@@ -12,9 +12,12 @@ def get_catalog():
     Each unique item combination must have only a single price.
     """
 
-    list = []
-    
-    return list
+    catalog = []
+    with db.engine.begin() as connection:
+        results = connection.execute(sqlalchemy.text("SELECT sku, name, publisher, price, genre, platform, mode_review FROM TABLE_NAME_HERE_TBD"))
+        for res in results:
+            catalog.append({"sku": res.sku, "name": res.name, "publisher": res.publisher, "price": res.price, "genre": res.genre, "platform": res.platform, "mode_review": res.mode_review})
+    return catalog
 
 @router.get("/catalog/search/", tags=["catalog"])
 def search_catalog():
