@@ -1,5 +1,5 @@
 import sqlalchemy
-from src import database as db
+import database as db
 
 from fastapi import APIRouter
 
@@ -9,14 +9,22 @@ router = APIRouter()
 @router.get("/catalog/", tags=["catalog"])
 def get_catalog():
     """
-    Each unique item combination must have only a single price.
+    Retrieves the available catalog of games for people to purchase. 
     """
 
     catalog = []
     with db.engine.begin() as connection:
-        results = connection.execute(sqlalchemy.text("SELECT sku, name, publisher, price, genre, platform, mode_review FROM TABLE_NAME_HERE_TBD"))
-        for res in results:
-            catalog.append({"sku": res.sku, "name": res.name, "publisher": res.publisher, "price": res.price, "genre": res.genre, "platform": res.platform, "mode_review": res.mode_review})
+        results = connection.execute(sqlalchemy.text("SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, mode_review FROM games")).fetchall()
+        for game in results:
+            catalog.append(
+                {"sku": game.item_sku, 
+                 "name": game.name, 
+                 "publisher": game.publisher, 
+                 "price": game.price, 
+                 "genre": game.genre, 
+                 "platform": game.platform, 
+                 "mode_review": game.mode_review,
+                 "rating": game.family_rating})
     return catalog
 
 @router.get("/catalog/search/", tags=["catalog"])
