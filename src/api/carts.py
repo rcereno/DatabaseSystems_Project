@@ -7,6 +7,11 @@ from src.api import auth
 from enum import Enum
 
 from sqlalchemy.exc import IntegrityError
+metadata_obj = sqlalchemy.MetaData()
+carts = sqlalchemy.Table("carts", metadata_obj, autoload_with=db.engine)
+accounts = sqlalchemy.Table("accounts", metadata_obj, autoload_with=db.engine)
+cart_items = sqlalchemy.Table("cart_items", metadata_obj, autoload_with=db.engine)
+wishlisted = sqlalchemy.Table("wishlisted", metadata_obj, autoload_with=db.engine)
 
 router = APIRouter(
     prefix="/carts",
@@ -14,95 +19,11 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-# class search_sort_options(str, Enum):
-#     customer_name = "customer_name"
-#     item_sku = "item_sku"
-#     line_item_total = "line_item_total"
-#     timestamp = "timestamp"
-
-# class search_sort_order(str, Enum):
-#     asc = "asc"
-#     desc = "desc"   
-
-# @router.get("/search/", tags=["search"])
-# def search_orders(
-#     customer_name: str = "",
-#     potion_sku: str = "",
-#     search_page: str = "",
-#     sort_col: search_sort_options = search_sort_options.timestamp,
-#     sort_order: search_sort_order = search_sort_order.desc,
-# ):
-#     """
-#     Search for cart line items by customer name and/or potion sku.
-
-#     Customer name and potion sku filter to orders that contain the 
-#     string (case insensitive). If the filters aren't provided, no
-#     filtering occurs on the respective search term.
-
-#     Search page is a cursor for pagination. The response to this
-#     search endpoint will return previous or next if there is a
-#     previous or next page of results available. The token passed
-#     in that search response can be passed in the next search request
-#     as search page to get that page of results.
-
-#     Sort col is which column to sort by and sort order is the direction
-#     of the search. They default to searching by timestamp of the order
-#     in descending order.
-
-#     The response itself contains a previous and next page token (if
-#     such pages exist) and the results as an array of line items. Each
-#     line item contains the line item id (must be unique), item sku, 
-#     customer name, line item total (in gold), and timestamp of the order.
-#     Your results must be paginated, the max results you can return at any
-#     time is 5 total line items.
-#     """
-
-#     return {
-#         "previous": "",
-#         "next": "",
-#         "results": [
-#             {
-#                 "line_item_id": 1,
-#                 "item_sku": "1 oblivion potion",
-#                 "customer_name": "Scaramouche",
-#                 "line_item_total": 50,
-#                 "timestamp": "2021-01-01T00:00:00Z",
-#             }
-#         ],
-#     }
-
-
 class Customer(BaseModel):
-    customer_name: str
-    customer_id: int
-
-# @router.post("/visits/{visit_id}")
-# def post_visits(visit_id: int, customers: list[Customer]):
-#     """
-#     Which customers visited the shop today?
-#     """
-    # notFirst = False
-
-    # print(f"visit_id: {visit_id}")
-    # print("[")
-    # for customer in customers:
-    #     if notFirst:
-    #         print(f",\n\tLvl {customer.level} {customer.character_class}: {customer.customer_name}", end = '')
-    #     else:
-    #         print(f"\tLvl {customer.level} {customer.character_class}: {customer.customer_name}", end = '')
-    #         notFirst = True
-    
-    # print("\n]")
-
-        
-
-    # print(customers)
-
-    # return "OK"
-
+    account_id: int
 
 @router.post("/")
-def create_cart(new_cart: Customer):
+def create_cart(customer: Customer):
     """ """
 
     with db.engine.begin() as connection:
@@ -110,25 +31,54 @@ def create_cart(new_cart: Customer):
         cart_id = connection.execute(
             sqlalchemy.text(
                 """
-                INSERT INTO
+                INSERT INTO carts
+                (account_id)
                 VALUES 
+                (:id)
+                returning id
                 """
             ),
             [{
-                "customer_name": "dummy"
+                "id": customer.account_id
             }]
         ).scalar_one()
 
     return {"cart_id": cart_id}
 
 @router.get("/{account_id}/{cart_id}")
-def cart_view():
-
+def cart_view(account_id: int, cart_id: int):
+    games_in_cart = []
+    cost = 0
+    with db.engine.begin() as connection:      
+        game_resuls = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT games.name, games.price_in_cents 
+                FROM games 
+                JOIN cart_items ON games.id = cart_items.game_id
+                WHERE cart_items.cart_id = :cart_id
+                """
+            ),
+            [{
+                "cart_id": cart_id
+            }]
+        ).fetchall()
+        customer_name = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT name 
+                FROM accounts 
+                JOIN carts ON carts.account_id = accounts.id
+                """
+            )).scalar_one()
+        for game, price in game_resuls:
+            games_in_cart.append(game)
+            cost += price
     return {
-        "cart_id": 0, 
-        "customer_name": "",
-        "games_in_cart": [],  
-        "total_cost": 0
+        "cart_id": cart_id, 
+        "customer_name": customer_name,
+        "games_in_cart": games_in_cart,
+        "total_cost": cost
     }
 
 
@@ -171,17 +121,21 @@ def set_item_quantity(cart_id: int, item_sku: str):
 def checkout(cart_id: int):
     """ """
     
-    # with db.engine.begin() as connection:
-    #     try:
-    #         connection.execute(
-    #             sqlalchemy.text(
-    #                 "INSERT INTO processed (job_id, type) VALUES (:id, 'cart_checkout')"
-    #             ),
+    with db.engine.begin() as connection:
+        # remove from wishlisted table if bought and they have it wishlisted
+        connection.execute(
+                sqlalchemy.delete(wishlisted)
+                .where(wishlisted.c.game_id == cart_items.c.game_id)
+                .where(cart_items.c.cart_id == cart_id)
+            )
+        # Need to finish: updating cart amounts on checkout
+        # connection.execute(sqlalchemy.text(
+        #     """
+        #     UPDATE carts 
+        #     SET total_cost =  total_games = 
 
-    #             [{
-    #                 "id": cart_id
-    #             }]
-    #         )
+        #     """
+        # ))
     #         # LEDGERIZING
     #         transaction_id = connection.execute(
     #             sqlalchemy.text(
