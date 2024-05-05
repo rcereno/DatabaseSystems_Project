@@ -43,7 +43,6 @@ Creates a new cart for a specific customer.
 
 ```json
 {
-  "customer_name": "string",
   "account_id": "integer"
 }
 ```
