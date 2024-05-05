@@ -79,7 +79,7 @@ create table
     transaction_id integer null,
     money_given integer null,
     play_time integer null default 0,
-    created_at timestamp with time zone not null default now()
+    created_at timestamp with time zone not null default now(),
     constraint purchases_pkey primary key (account_id, game_id),
     constraint purchases_account_id_fkey foreign key (account_id) references accounts (id) on update cascade on delete restrict,
     constraint purchases_game_id_fkey foreign key (game_id) references games (id) on update cascade on delete restrict,
