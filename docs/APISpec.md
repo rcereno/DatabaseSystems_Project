@@ -130,7 +130,7 @@ A call customers can make to register their account.
 ```json
 {
   "customer_name": "string",
-  "account_id": "integer"
+  "email": "string"
 }
 ```
 

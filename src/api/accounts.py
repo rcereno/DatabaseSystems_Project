@@ -14,16 +14,19 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+class Account(BaseModel):
+    customer_name: str
+    customer_email: str
 
 @router.post("/{customer_id}/register")
-def register_customer( customer_id: int):
+def register_customer(customer: Account):
     """ """
     with db.engine.begin() as connection:       
         connection.execute(
             sqlalchemy.text(
-                "INSERT INTO accounts (id, email, name) VALUES (:id, 'xia', 'testing')"
+                "INSERT INTO accounts (email, name) VALUES (:name, :email)"
             ),
-            {"id": customer_id}
+            {"name": customer.customer_name, "email": customer.customer_email}
         )
     
     return "OK"
