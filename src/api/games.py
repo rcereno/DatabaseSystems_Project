@@ -21,10 +21,3 @@ router = APIRouter(
 #     price: int
 
 #     quantity: int
-
-@router.post("/{game_id}}/reviews")
-def add_review(account_id: int, game_id: int, review: int):
-
-    """ """
-            
-    return "OK"
