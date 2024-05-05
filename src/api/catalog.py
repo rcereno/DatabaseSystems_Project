@@ -1,5 +1,5 @@
 import sqlalchemy
-import database as db
+from src.api import database as db
 
 from fastapi import APIRouter
 
@@ -11,7 +11,6 @@ def get_catalog():
     """
     Retrieves the available catalog of games for people to purchase. 
     """
-
     catalog = []
     with db.engine.begin() as connection:
         results = connection.execute(sqlalchemy.text("SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, mode_review FROM games")).fetchall()
@@ -20,7 +19,7 @@ def get_catalog():
                 {"sku": game.item_sku, 
                  "name": game.name, 
                  "publisher": game.publisher, 
-                 "price": game.price, 
+                 "price": game.price_in_cents, 
                  "genre": game.genre, 
                  "platform": game.platform, 
                  "mode_review": game.mode_review,

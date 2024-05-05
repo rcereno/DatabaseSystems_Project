@@ -1,9 +1,9 @@
 import sqlalchemy
-import database as db
+from src.api import database as db
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-import auth
+from src.api import auth
 
 from sqlalchemy.exc import IntegrityError
 

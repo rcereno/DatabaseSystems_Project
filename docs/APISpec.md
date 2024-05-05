@@ -3,6 +3,7 @@
 ## 1. Customer Purchasing
 
 The API's:
+
 1. `Get Catalog`
 2. `New Cart`
 3. `Add Item to Cart` (Can be called multiple times)
@@ -15,23 +16,25 @@ The API's:
 
 ### 1. Get Catalog - `/catalog/` (GET)
 
-Retrieves the catalog of items. Each unique item combination should have only a single price. 
+Retrieves the catalog of items. Each unique item combination should have only a single price.
 
 **Response**:
 
 ```json
 [
-    {
-        "sku": "string", /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */
-        "name": "string",
-        "publisher": "string",
-        "price": "integer", /* Between 1 and 500 */
-        "genre": "string",
-        "platform": "string",
-        "mode_review": "integer" /*between 1-5 for 1-5 stars*/
-    }
+  {
+    "sku": "string" /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */,
+    "name": "string",
+    "publisher": "string",
+    "price": "integer" /* Between 1 and 500 */,
+    "genre": "string",
+    "platform": "string",
+    "mode_review": "integer" /*between 1-5 for 1-5 stars*/,
+    "rating": "string" /*Rating for the game*/
+  }
 ]
 ```
+
 ### 2. New Cart - `/carts/` (POST)
 
 Creates a new cart for a specific customer.
@@ -49,9 +52,9 @@ Creates a new cart for a specific customer.
 
 ```json
 {
-    "cart_id": "string" /* This id will be used for future calls to add items and checkout */
+  "cart_id": "string" /* This id will be used for future calls to add items and checkout */
 }
-``` 
+```
 
 ### 3. Add Item to Cart - `/carts/{cart_id}/{item_sku}` (PUT)
 
@@ -59,12 +62,11 @@ Updates a specific game in a cart. Will update their cart in the cart_items tabl
 
 **Request**:
 
-
 **Response**:
 
 ```json
 {
-    "success": "boolean"
+  "success": "boolean"
 }
 ```
 
@@ -76,7 +78,7 @@ Handles the checkout process for a specific cart.
 
 ```json
 {
-  "payment": "string",
+  "payment": "string"
 }
 ```
 
@@ -84,12 +86,13 @@ Handles the checkout process for a specific cart.
 
 ```json
 {
-    "games_bought": "integer",
-    "total_price": "integer"
+  "games_bought": "integer",
+  "total_price": "integer"
 }
 ```
 
 ### 6. Search Games in Catalog - `/catalog/search/` (GET)
+
 Searches for games based on specified query parameters.
 
 **Query Parameters**:
@@ -107,18 +110,20 @@ The API returns a JSON object with the following structure:
 - `previous`: A string that represents the link to the previous page of results. If there is no previous page, this value is an empty string.
 - `next`: A string that represents the link to the next page of results. If there is no next page, this value is an empty string.
 - `results`: An array of objects, each representing a line item. Each line item object has the following properties:
-    - `line_item_id`: An integer that represents the unique identifier of the line item.
-    - `game_sku`: A string that represents the SKU of the game. 
-    - `price`: An integer representing the price of the game
-    - `publisher`: A string that represents the publisher of the game
-    - `platform`: A string that represents the platform the game is available on.
-    - `mode_review`: A number representing the most frequently given star review.
-    - `genre`: A string representing the genre of the game. 
-    - `release_date`: A string that represents the date and time when the game was released. This is in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).
-  
+  - `line_item_id`: An integer that represents the unique identifier of the line item.
+  - `game_sku`: A string that represents the SKU of the game.
+  - `price`: An integer representing the price of the game
+  - `publisher`: A string that represents the publisher of the game
+  - `platform`: A string that represents the platform the game is available on.
+  - `mode_review`: A number representing the most frequently given star review.
+  - `genre`: A string representing the genre of the game.
+  - `release_date`: A string that represents the date and time when the game was released. This is in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).
+
 ### 7. Account Management
+
 ### 7.1 Account Registration - `/register/{account_id}` (POST)
-A call customers can make to register their account. 
+
+A call customers can make to register their account.
 
 **Request**:
 
@@ -130,12 +135,15 @@ A call customers can make to register their account.
 ```
 
 **Response**
+
 ```json
 {
   "success": "boolean"
 }
 ```
+
 ### 7.2 Account View- `/view_account/{account_id}` (GET)
+
 **Request**:
 
 ```json
@@ -144,7 +152,9 @@ A call customers can make to register their account.
   "account_id": "integer"
 }
 ```
+
 **Reponse**
+
 ```json
 {
     "customer_name": "string",
@@ -155,6 +165,7 @@ A call customers can make to register their account.
 ```
 
 ### 7.3 Cart View- `/{account_id}/carts/{cart_id}` (GET)
+
 An API call that lets customers view their current cart, if one exists.
 **Request**:
 
@@ -164,7 +175,9 @@ An API call that lets customers view their current cart, if one exists.
   "account_id": "integer"
 }
 ```
+
 **Reponse**
+
 ```json
 {
     "cart_id": "integer" /*an integer representing the cart_id of the cart, if one exists*/
@@ -173,7 +186,9 @@ An API call that lets customers view their current cart, if one exists.
     "total_cost": "integer" /*an integer representing the cost of their total cart*/
 }
 ```
+
 ### 8. Add to wishlist- `/{item_sku}/wishlist/{account_id}` (PUT)
+
 An API call that allows a customer to add a specific game to their account wishlist.
 **Request**:
 
@@ -183,10 +198,12 @@ An API call that allows a customer to add a specific game to their account wishl
   "account_id": "integer"
 }
 ```
+
 **Reponse**
+
 ```json
 {
-    "success" : "boolean"
+  "success": "boolean"
 }
 ```
 
@@ -202,7 +219,7 @@ shop should take this as an opportunity to remove all of their inventory and set
 
 ### .1. Current time - `/info/current_time` (POST)
 
-Shares what the latest time (in game time) is. 
+Shares what the latest time (in game time) is.
 
 **Request**:
 
@@ -222,6 +239,7 @@ Shares what the latest time (in game time) is.
 Return a summary of your current number of games and total shop's money.
 
 **Response**:
+
 ```json
 {
   "number_of_games: "number",
@@ -229,25 +247,24 @@ Return a summary of your current number of games and total shop's money.
 )
 ```
 
-
 ### 9. Review game - '/games/{game_id}/reviews' (PUT)
 
 Add review of up to five stars into a game's review data.
 
 **Request:**
+
 ```json
 {
   "game_id": "integer",
   "account_id": "integer",
-  "review": "integer"  /*1-5 for 5 stars*/
+  "review": "integer" /*1-5 for 5 stars*/
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success" : "boolean"
 )
 ```
-
-

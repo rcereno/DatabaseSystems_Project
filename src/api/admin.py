@@ -1,9 +1,9 @@
 import sqlalchemy
-import database as db
+from src.api import database as db
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-import auth
+from src.api import auth
 
 router = APIRouter(
     prefix="/admin",
