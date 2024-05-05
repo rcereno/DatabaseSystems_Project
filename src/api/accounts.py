@@ -18,6 +18,13 @@ router = APIRouter(
 @router.post("/{customer_id}/register")
 def register_customer( customer_id: int):
     """ """
+    with db.engine.begin() as connection:       
+        connection.execute(
+            sqlalchemy.text(
+                "INSERT INTO accounts (id, email, name) VALUES (:id, 'xia', 'testing')"
+            ),
+            {"id": customer_id}
+        )
     
     return "OK"
 
@@ -34,21 +41,3 @@ def account_view():
         "current_cart": 0
     } 
 
-
-# if __name__ == "__main__":
-#     list = get_bottle_plan()
-
-#     notFirst = False
-
-#     print("Potions made: ")
-#     print("[")
-#     for p in list:
-#         potion_type = p["potion_type"]
-#         quantity = p["quantity"]
-#         if notFirst:
-#             print(f",\n\t{potion_type}: {quantity}", end = '')
-#         else:
-#             print(f"\t{potion_type}: {quantity}", end = '')
-#             notFirst = True
-    
-#     print("\n]")

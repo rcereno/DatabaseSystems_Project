@@ -76,11 +76,11 @@ class Customer(BaseModel):
     customer_name: str
     customer_id: int
 
-@router.post("/visits/{visit_id}")
-def post_visits(visit_id: int, customers: list[Customer]):
-    """
-    Which customers visited the shop today?
-    """
+# @router.post("/visits/{visit_id}")
+# def post_visits(visit_id: int, customers: list[Customer]):
+#     """
+#     Which customers visited the shop today?
+#     """
     # notFirst = False
 
     # print(f"visit_id: {visit_id}")
@@ -98,7 +98,7 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
     # print(customers)
 
-    return "OK"
+    # return "OK"
 
 
 @router.post("/")
@@ -140,27 +140,25 @@ def cart_view():
 def set_item_quantity(cart_id: int, item_sku: str):
     """ """
 
-    # with db.engine.begin() as connection:       
-
-        # gameId = connection.execute(
-        #     sqlalchemy.text(
-        #         "SELECT id FROM games WHERE sku = :item_sku"
-        #     ),
-        #     [{
-        #         "item_sku": item_sku
-        #     }]
-        # ).scalar_one()
-
-        # connection.execute(
-        #     sqlalchemy.text(
-        #         "INSERT INTO cart_items (cart_id, potion_id, quantity) VALUES (:cart_id, :potionId, :quantity)"
-        #     ),
-        #     [{
-        #         "cart_id": cart_id,
-        #         "potionId": potionId,
-        #         "quantity": cart_item.quantity
-        #     }]
-        # )
+    with db.engine.begin() as connection:       
+        gameId_price = connection.execute(
+            sqlalchemy.text(
+                "SELECT id, price_in_cents FROM games WHERE item_sku = :item_sku"
+            ),
+            {
+                "item_sku": item_sku
+            }).fetchone()
+        gameId, price = gameId_price
+        connection.execute(
+            sqlalchemy.text(
+                "INSERT INTO cart_items (cart_id, game_id, cost) VALUES (:cart_id, :game_id, :cost)"
+            ),
+            [{
+                "cart_id": cart_id,
+                "game_id": gameId,
+                "cost": price
+            }]
+        )
 
     return "OK"
 
