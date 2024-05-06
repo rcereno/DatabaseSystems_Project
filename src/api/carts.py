@@ -98,7 +98,10 @@ def set_item_quantity(cart_id: int, item_sku: str):
             {
                 "item_sku": item_sku
             }).fetchone()
-        gameId, price = gameId_price
+        try: 
+            gameId, price = gameId_price
+        except Exception:
+            return "Game not available in inventory"
         connection.execute(
             sqlalchemy.text(
                 "INSERT INTO cart_items (cart_id, game_id, cost) VALUES (:cart_id, :game_id, :cost)"

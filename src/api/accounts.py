@@ -74,21 +74,46 @@ def account_view(account_id: int):
                 FROM wishlisted
                 JOIN games
                 ON games.id = wishlisted.game_id
-                WHERE wishlsited.account_id = :account_id
+                WHERE wishlisted.account_id = :account_id
                 """
             ),
             [{
                 "account_id": account_id
             }]
         ).fetchall()
-        
+        # fetch most recent cart they have (should only have one)
+        current_cart_id = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT id FROM carts
+                WHERE carts.account_id = :account_id
+                ORDER BY created_at DESC
+                """
+            ),
+             [{
+                "account_id": account_id
+            }]
+        ).scalar_one()
+        cart_items_results = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT COUNT(game_id), SUM(cost)
+                FROM cart_items
+                WHERE cart_items.cart_id = :cart_id
+                """
+            ),
+             [{
+                "cart_id": current_cart_id
+            }]
+        ).fetchone()
+        games_in_cart, cost = cart_items_results
 
-    return {
-        "customer_name": name,
-        "games_owned": games_owned,
-        "wishlist": wishlist,
-        "current_cart": 0
-    } 
+        return {
+            "customer_name": name,
+            "games_owned": games_owned,
+            "wishlist": wishlist,
+            "current_cart": f"Games in cart: {games_in_cart}, Cost: {cost}"
+        } 
 
 class Review(BaseModel):
     rating: int
@@ -111,21 +136,37 @@ def add_review(account_id: int, game_sku: int, review: Review):
                 "sku": game_sku
             }]
         ).scalar_one()
-
-        connection.execute(
+        purchased = connection.execute(
             sqlalchemy.text(
                 """
-                INSERT INTO reviews (account_id, game_id, review)
-                VALUES (:account_id, :game_id, :review)
-                ON DUPLICATE KEY UPDATE review = VALUES(:review)
+                SELECT account_id, game_id
+                FROM purchased
+                WHERE account_id = :acc_id
+                AND game_Id = :game_id
                 """
             ),
-            [{
-                "account_id": account_id,
-                "game_id": game_id,
-                "review": review.rating
-            }]
-        )
+            {
+                "acc_id": account_id,
+                "game_id": game_id
+            }
+        ).fetchone()
+        if purchased:
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    INSERT INTO reviews (account_id, game_id, review)
+                    VALUES (:account_id, :game_id, :review)
+                    ON DUPLICATE KEY UPDATE review = VALUES(:review)
+                    """
+                ),
+                [{
+                    "account_id": account_id,
+                    "game_id": game_id,
+                    "review": review.rating
+                }]
+            )
+        else:
+            return "Cannot review a game you do not own."
             
     return "OK"
 

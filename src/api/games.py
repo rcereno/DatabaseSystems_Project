@@ -13,11 +13,3 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-# class Barrel(BaseModel):
-#     sku: str
-
-#     ml_per_barrel: int
-#     potion_type: list[int]
-#     price: int
-
-#     quantity: int
