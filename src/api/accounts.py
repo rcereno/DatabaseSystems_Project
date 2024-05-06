@@ -24,7 +24,7 @@ def register_customer(customer: Account):
     with db.engine.begin() as connection:       
         connection.execute(
             sqlalchemy.text(
-                "INSERT INTO accounts (email, name) VALUES (:name, :email)"
+                "INSERT INTO accounts (email, name) VALUES (:email, :name)"
             ),
             {"name": customer.customer_name, "email": customer.customer_email}
         )
