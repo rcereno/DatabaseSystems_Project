@@ -6,7 +6,7 @@ from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import NoResultFound
 
 router = APIRouter(
     prefix="/accounts",
@@ -49,7 +49,7 @@ def account_view(account_id: int):
             [{
                 "account_id": account_id
             }]
-        ).scalar_one()
+        ).scalar()
 
         games_owned = connection.execute(
             sqlalchemy.text(
@@ -66,7 +66,9 @@ def account_view(account_id: int):
                 "account_id": account_id
             }]
         ).fetchall()
-
+        games = []
+        for game in games_owned:
+            games.append(game)
         wishlist = connection.execute(
             sqlalchemy.text(
                 """
@@ -81,19 +83,32 @@ def account_view(account_id: int):
                 "account_id": account_id
             }]
         ).fetchall()
+        wishlisted = []
+        for game_w in wishlist:
+            wishlisted.append(game_w)
         # fetch most recent cart they have (should only have one)
-        current_cart_id = connection.execute(
+        games_in_cart = cost = 0
+        try: 
+            current_cart_id = connection.execute(
             sqlalchemy.text(
                 """
                 SELECT id FROM carts
-                WHERE carts.account_id = :account_id
+                WHERE carts.account_id = :account_id AND carts.checked_out = FALSE
                 ORDER BY created_at DESC
                 """
             ),
              [{
                 "account_id": account_id
             }]
-        ).scalar_one()
+            ).scalar_one()
+        except NoResultFound:
+            return {
+            "customer_name": name,
+            "games_owned": games,
+            "wishlist": wishlisted,
+            "current_cart": f"Games in cart: {games_in_cart}, Cost: {cost}"
+        } 
+        # Cart that's not checked out found, so do this
         cart_items_results = connection.execute(
             sqlalchemy.text(
                 """
@@ -110,8 +125,8 @@ def account_view(account_id: int):
 
         return {
             "customer_name": name,
-            "games_owned": games_owned,
-            "wishlist": wishlist,
+            "games_owned": games,
+            "wishlist": wishlisted,
             "current_cart": f"Games in cart: {games_in_cart}, Cost: {cost}"
         } 
 
@@ -120,7 +135,7 @@ class Review(BaseModel):
 
 
 @router.post("/{account_id}/reviews/{game_sku}")
-def add_review(account_id: int, game_sku: int, review: Review):
+def add_review(account_id: int, game_sku: str, review: Review):
     """ """
 
     with db.engine.begin() as connection:
@@ -140,7 +155,7 @@ def add_review(account_id: int, game_sku: int, review: Review):
             sqlalchemy.text(
                 """
                 SELECT account_id, game_id
-                FROM purchased
+                FROM purchases
                 WHERE account_id = :acc_id
                 AND game_Id = :game_id
                 """
@@ -156,7 +171,8 @@ def add_review(account_id: int, game_sku: int, review: Review):
                     """
                     INSERT INTO reviews (account_id, game_id, review)
                     VALUES (:account_id, :game_id, :review)
-                    ON DUPLICATE KEY UPDATE review = VALUES(:review)
+                    ON CONFLICT (account_id, game_id) DO UPDATE 
+                    SET review = EXCLUDED.review
                     """
                 ),
                 [{

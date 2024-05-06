@@ -83,7 +83,7 @@ create table
     constraint purchases_pkey primary key (account_id, game_id),
     constraint purchases_account_id_fkey foreign key (account_id) references accounts (id) on update cascade on delete restrict,
     constraint purchases_game_id_fkey foreign key (game_id) references games (id) on update cascade on delete restrict,
-    constraint purchases_transaction_id_fkey foreign key (transaction_id) references transactions (id) on update cascade on delete restrict
+    constraint public_purchases_transaction_id_fkey foreign key (transaction_id) references transactions (id) on update restrict on delete cascade
   ) tablespace pg_default;
 
 -- Create reviews
