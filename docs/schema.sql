@@ -108,3 +108,13 @@ create table
     constraint wishlisted_account_id_fkey foreign key (account_id) references accounts (id) on update cascade on delete restrict,
     constraint wishlisted_game_id_fkey foreign key (game_id) references games (id) on update cascade on delete restrict
   ) tablespace pg_default;
+
+
+create view total_inventory_view as
+select
+  (select COUNT(*) from games) as total_games,
+  (select COUNT(*) from purchases) as total_purchases,
+  (select coalesce(sum(price_in_cents), 0) 
+    from purchases
+    join games
+    on games.id = purchases.game_id) as money
