@@ -29,7 +29,5 @@ def get_inventory():
         connection.execute(sqlalchemy.text(
             "SELECT total_games, total_purchases, money FROM total_inventory_view"
         ))
-
         # could also just do SELECT (*) since only have 3 things but will keep as this
-
     return {"number_of_games": 0, "number_of_purchases": 0, "money": 0}

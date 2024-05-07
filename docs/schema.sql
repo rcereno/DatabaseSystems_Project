@@ -109,7 +109,6 @@ create table
     constraint wishlisted_game_id_fkey foreign key (game_id) references games (id) on update cascade on delete restrict
   ) tablespace pg_default;
 
-
 create view total_inventory_view as
 select
   (select COUNT(*) from games) as total_games,
