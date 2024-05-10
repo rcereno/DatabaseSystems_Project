@@ -195,7 +195,7 @@ def add_review(account_id: int, game_sku: str):
         try:
             game_id = connection.execute(
                 sqlalchemy.text(
-                    "SELECT id FROM games WHERE sku = :game_sku"
+                    "SELECT id FROM games WHERE item_sku = :game_sku"
                 ),
                 [{
                     "game_sku": game_sku
@@ -214,8 +214,12 @@ def add_review(account_id: int, game_sku: str):
 
             )
 
-            return "OK"
+            return {
+                "success": True
+            }
         
         except IntegrityError as e:
             print("Account already wishlisted this game.")
-            return "OK"
+            return {
+                "success": False
+            }
