@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from src.api import auth
 
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
     prefix="/accounts",
@@ -186,3 +187,35 @@ def add_review(account_id: int, game_sku: str, review: Review):
             
     return "OK"
 
+
+@router.post("/{account_id}/wishlist/{game_sku}")
+def add_review(account_id: int, game_sku: str):
+     with db.engine.begin() as connection:
+        # Integrity Error check
+        try:
+            game_id = connection.execute(
+                sqlalchemy.text(
+                    "SELECT id FROM games WHERE sku = :game_sku"
+                ),
+                [{
+                    "game_sku": game_sku
+                }]
+            ).scalar_one()
+
+            connection.execute(
+                sqlalchemy.text(
+                    "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
+                ),
+
+                [{
+                    "account_id": account_id,
+                    "game_id": game_id
+                }]
+
+            )
+
+            return "OK"
+        
+        except IntegrityError as e:
+            print("Account already wishlisted this game.")
+            return "OK"
