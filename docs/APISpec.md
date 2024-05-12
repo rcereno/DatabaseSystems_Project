@@ -232,21 +232,6 @@ shop should take this as an opportunity to remove all of their inventory and set
 
 ### 5. Info Functions
 
-### .1. Current time - `/info/current_time` (POST)
-
-Shares what the latest time (in game time) is.
-
-**Request**:
-
-```json
-[
-  {
-    "day": "string",
-    "hour": "integer"
-  }
-]
-```
-
 ### 6. Audit Functions
 
 ### 6.1. Get Inventory Summary - `/inventory/audit` (GET)
