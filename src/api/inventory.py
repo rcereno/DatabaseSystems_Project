@@ -26,8 +26,13 @@ def get_inventory():
     #         {"name": customer.customer_name, "email": customer.customer_email}
     #     
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-            "SELECT total_games, total_purchases, money FROM total_inventory_view"
-        ))
-        # could also just do SELECT (*) since only have 3 things but will keep as this
-    return {"number_of_games": 0, "number_of_purchases": 0, "money": 0}
+        inventoryItems = connection.execute(sqlalchemy.text(
+            '''SELECT 
+                total_games, 
+                total_purchases, 
+                money 
+                FROM total_inventory_view'''
+            )
+        ).one()
+    print(f"number_of_games: {inventoryItems.total_games}, number_of_purchases: {inventoryItems.total_purchases}, money: {inventoryItems.money}")
+    return {"number_of_games": inventoryItems.total_games, "number_of_purchases": inventoryItems.total_purchases, "money": inventoryItems.money}
