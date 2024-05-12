@@ -210,7 +210,12 @@ def add_review(account_id: int, game_sku: str):
                     "game_sku": game_sku
                 }]
             ).scalar_one()
-
+        except NoResultFound:
+            return {
+                "success": False,
+                "msg": "This game does not exist in inventory."
+            }
+        try:
             connection.execute(
                 sqlalchemy.text(
                     "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
@@ -222,13 +227,12 @@ def add_review(account_id: int, game_sku: str):
                 }]
 
             )
-
-            return {
-                "success": True
-            }
-        
         except IntegrityError as e:
-            print("Account already wishlisted this game.")
             return {
-                "success": False
+                "success": False,
+                "msg": "Account already wishlisted this game."
+            }
+        return {
+                "success": True,
+                "msg": "Game successfully added to wishlist."
             }
