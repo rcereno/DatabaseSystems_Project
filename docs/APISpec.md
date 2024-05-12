@@ -209,13 +209,14 @@ shop should take this as an opportunity to remove all of their inventory and set
 
 ### 6.1. Get Inventory Summary - `/inventory/audit` (GET)
 
-Return a summary of your current number of games and total shop's money.
+Return a summary of your current number of games, total number of purchases, and total shop's money.
 
 **Response**:
 
 ```json
 {
   "number_of_games": "integer",
+  "number_of_purchases": "integer",
   "money": "integer"
 )
 ```
