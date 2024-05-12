@@ -152,7 +152,8 @@ A call customers can make to register their account.
 
 ```json
 {
-  "success": "boolean"
+  "success": "boolean",
+  "msg": "string"
 }
 ```
 
