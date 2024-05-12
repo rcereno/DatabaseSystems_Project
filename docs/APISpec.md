@@ -90,6 +90,21 @@ Handles the checkout process for a specific cart.
 }
 ```
 
+### 5. View Cart - `/carts/{account_id}/{cart_id}` (POST)
+
+View current cart of the customer
+
+**Response**:
+
+```json
+{
+  "cart_id": "integer",
+  "customer_name": "string",
+  "games_in_cart": "integer",
+  "total_cost": "integer"
+}
+```
+
 ### 6. Search Games in Catalog - `/catalog/search/` (GET)
 
 Searches for games based on specified query parameters.
@@ -226,7 +241,7 @@ Shares what the latest time (in game time) is.
 [
   {
     "day": "string",
-    "hour": "number"
+    "hour": "integer"
   }
 ]
 ```
@@ -241,8 +256,8 @@ Return a summary of your current number of games and total shop's money.
 
 ```json
 {
-  "number_of_games: "number",
-  "money": "number"
+  "number_of_games": "integer",
+  "money": "integer"
 )
 ```
 
