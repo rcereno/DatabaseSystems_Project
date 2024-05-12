@@ -22,15 +22,24 @@ class Account(BaseModel):
 @router.post("/{customer_id}/register")
 def register_customer(customer: Account):
     """ """
-    with db.engine.begin() as connection:       
-        connection.execute(
-            sqlalchemy.text(
-                "INSERT INTO accounts (email, name) VALUES (:email, :name)"
-            ),
-            {"name": customer.customer_name, "email": customer.customer_email}
-        )
+    try:
+        with db.engine.begin() as connection:       
+            connection.execute(
+                sqlalchemy.text(
+                    "INSERT INTO accounts (email, name) VALUES (:name, :email)"
+                ),
+                {"name": customer.customer_name, "email": customer.customer_email}
+            )
+    except IntegrityError:
+        return {
+            "success": False,
+            "msg": "Account with email already exists"
+        }
     
-    return "OK"
+    return {
+        "success": True,
+        "msg": "Account successfully registered"
+    }
 
 @router.post("/{account_id}/view")
 def account_view(account_id: int):
