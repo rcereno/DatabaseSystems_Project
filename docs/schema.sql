@@ -38,7 +38,7 @@ create table
     name text null,
     publisher text null,
     price_in_cents integer null,
-    mode_review integer null,
+    mode_review integer null default 0,
     platform text null,
     genre text null,
     family_rating text null,
