@@ -164,12 +164,8 @@ A call customers can make to register their account.
 ```json
 {
   "customer_name": "string",
-  "games_owned": [
-    "string"
-  ] /*an array of strings representing the names of games that the customer owns*/,
-  "wishlist": [
-    "string"
-  ] /*an array of strings representing the names of games that the customer wants*/,
+  "games_owned": ["string"], /*an array of strings representing the names of games that the customer owns*/,
+  "wishlist": ["string"], /*an array of strings representing the names of games that the customer wants*/,
   "current_cart": "Games in cart: {games_in_cart}, Cost: {cost}" /*string showing current cart contents*/
 }
 ```
@@ -177,6 +173,19 @@ A call customers can make to register their account.
 ### 8. Add to wishlist- `/{account_id}/wishlist/{game_sku}` (PUT)
 
 An API call that allows a customer to add a specific game to their account wishlist.
+
+**Reponse**
+
+```json
+{
+  "success": "boolean",
+  "msg": "string"
+}
+```
+
+### 9. Review game- `/{account_id}/reviews/{game_sku}` (PUT)
+
+An API call that allows a customer to review a game.
 
 **Reponse**
 

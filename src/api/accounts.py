@@ -149,18 +149,24 @@ def add_review(account_id: int, game_sku: str, review: Review):
     """ """
 
     with db.engine.begin() as connection:
-        game_id = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT id
-                FROM games 
-                WHERE item_sku = :sku
-                """
-            ),
-            [{
-                "sku": game_sku
-            }]
-        ).scalar_one()
+        try:
+            game_id = connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT id
+                    FROM games 
+                    WHERE item_sku = :sku
+                    """
+                ),
+                [{
+                    "sku": game_sku
+                }]
+            ).scalar_one()
+        except NoResultFound:
+            return {
+                "success": False,
+                "msg": "Game does not exist in inventory"
+            }
         purchased = connection.execute(
             sqlalchemy.text(
                 """
@@ -192,9 +198,15 @@ def add_review(account_id: int, game_sku: str, review: Review):
                 }]
             )
         else:
-            return "Cannot review a game you do not own."
+            return {
+                "success": False,
+                "msg": "Cannot review a game you do not own."
+            }
             
-    return "OK"
+    return {
+                "success": True,
+                "msg": "Game successfully reviewed."
+            }
 
 
 @router.post("/{account_id}/wishlist/{game_sku}")
