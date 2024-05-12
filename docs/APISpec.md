@@ -235,25 +235,3 @@ Return a summary of your current number of games and total shop's money.
   "money": "integer"
 )
 ```
-
-### 9. Review game - '/games/{game_id}/reviews' (PUT)
-
-Add review of up to five stars into a game's review data.
-
-**Request:**
-
-```json
-{
-  "game_id": "integer",
-  "account_id": "integer",
-  "review": "integer" /*1-5 for 5 stars*/
-}
-```
-
-**Response:**
-
-```json
-{
-  "success" : "boolean"
-)
-```
