@@ -157,68 +157,33 @@ A call customers can make to register their account.
 }
 ```
 
-### 7.2 Account View- `/view_account/{account_id}` (GET)
-
-**Request**:
-
-```json
-{
-  "customer_name": "string",
-  "account_id": "integer"
-}
-```
+### 7.2 Account View- `/{account_id}/view` (GET)
 
 **Reponse**
 
 ```json
 {
-    "customer_name": "string",
-    "games_owned": ["string"]  /*an array of strings representing the names of games that the customer owns*/
-    "wishlist": ["string"]  /*an array of strings representing the names of games that the customer wants*/
-    "current_cart": "integer" /*an integer representing the cart_id of their current cart, if one exists*/
-}
-```
-
-### 7.3 Cart View- `/{account_id}/carts/{cart_id}` (GET)
-
-An API call that lets customers view their current cart, if one exists.
-**Request**:
-
-```json
-{
   "customer_name": "string",
-  "account_id": "integer"
+  "games_owned": [
+    "string"
+  ] /*an array of strings representing the names of games that the customer owns*/,
+  "wishlist": [
+    "string"
+  ] /*an array of strings representing the names of games that the customer wants*/,
+  "current_cart": "Games in cart: {games_in_cart}, Cost: {cost}" /*string showing current cart contents*/
 }
 ```
 
-**Reponse**
-
-```json
-{
-    "cart_id": "integer" /*an integer representing the cart_id of the cart, if one exists*/
-    "customer_name": "string",
-    "games_in_cart": ["string"]  /*an array of strings representing the names of games that the customer has in their cart*/
-    "total_cost": "integer" /*an integer representing the cost of their total cart*/
-}
-```
-
-### 8. Add to wishlist- `/{item_sku}/wishlist/{account_id}` (PUT)
+### 8. Add to wishlist- `/{account_id}/wishlist/{game_sku}` (PUT)
 
 An API call that allows a customer to add a specific game to their account wishlist.
-**Request**:
-
-```json
-{
-  "customer_name": "string",
-  "account_id": "integer"
-}
-```
 
 **Reponse**
 
 ```json
 {
-  "success": "boolean"
+  "success": "boolean",
+  "msg": "string"
 }
 ```
 
