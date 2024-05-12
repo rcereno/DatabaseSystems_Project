@@ -220,3 +220,4 @@ Return a summary of your current number of games, total number of purchases, and
   "money": "integer"
 )
 ```
+
