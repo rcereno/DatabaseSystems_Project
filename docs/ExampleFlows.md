@@ -3,12 +3,12 @@ Example Flow 1: Search Games by Name
 User Story: As a gamer, I want to be able to search games by 
 name so that I can find a specific game quickly.
 
-Scenario: Sam wants to find a game called "GAYT IV."
+Scenario: Sam wants to find a game called "GYAT IV."
 
 Search Games in Catalog
 Endpoint: GET /catalog/search/
-Query Parameters: game_name=GAYT IV
-Action: Sam searches for "GAYT IV" using the game's name.
+Query Parameters: game_name=GYAT IV
+Action: Sam searches for "GYAT IV" using the game's name.
 
 
 ```
@@ -16,13 +16,13 @@ Action: Sam searches for "GAYT IV" using the game's name.
     "results": [
         
             "game_sku": "324334",
-            "name": "GAYT IV",
+            "name": "GYAT IV",
             "price": 1,
             "publisher": "monster games",
             "platform": "PC",
             "mode_review": 5,
             "genre": "Fantasy",
-            "release_date": "01/02/199"
+            "release_date": "01/02/1999"
         
     ]
 }
@@ -33,7 +33,7 @@ Example Flow 2: Add Game to Wishlist
 User Story: As a gamer, I want to be able to wishlist games I 
 want so that I can keep track of what I am interested in buying.
 
-Scenario: Lisa wants to add "GAYT IV" to her wishlist 
+Scenario: Lisa wants to add "GYAT IV" to her wishlist 
 for future purchase.
 
 Add to Wishlist
