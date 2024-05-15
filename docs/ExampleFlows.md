@@ -80,7 +80,7 @@ RESPONSE
 {
     "customer_name": "MarkD",
     "games_owned": ["Red Rawr Heros", "Am I Dead lol"],
-    "wishlist": ["Gayt IV"],
+    "wishlist": ["Gyat IV"],
     "current_cart": 102
 }
 ```
