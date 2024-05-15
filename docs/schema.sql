@@ -6,6 +6,7 @@ create table
     name text null,
     created_at timestamp with time zone not null default now(),
     constraint accounts_pkey primary key (id)
+    constraint accounts_email_key unique (email)
   ) tablespace pg_default;
 
 -- -- Create customers 
@@ -54,6 +55,7 @@ create table
     account_id integer null,
     total_games integer null default 0,
     total_cost integer null default 0,
+    checked_out boolean null default false,
     created_at timestamp with time zone not null default now(),
     constraint carts_pkey primary key (id),
     constraint public_carts_customer_id_fkey foreign key (account_id) references accounts (id) on update restrict on delete restrict
@@ -117,3 +119,29 @@ select
     from purchases
     join games
     on games.id = purchases.game_id) as money
+
+create view
+  public.avg_review_view as
+select
+  reviews.game_id,
+  round((sum(reviews.review) / count(*))::numeric, 0) as review
+from
+  reviews
+group by
+  reviews.game_id;
+
+create view
+  public.game_catalog as
+select
+  games.item_sku,
+  games.name,
+  games.publisher,
+  games.price_in_cents,
+  games.genre,
+  games.platform,
+  games.family_rating,
+  coalesce(avg_review.review, '-1'::integer::numeric) as review,
+  games.release_date
+from
+  games
+  left join avg_review_view avg_review on games.id = avg_review.game_id;

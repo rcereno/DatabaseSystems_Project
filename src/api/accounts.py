@@ -183,13 +183,14 @@ def add_review(account_id: int, game_sku: str, review: Review):
                 }]
             )
         else:
+            print("Cannot review a game you do not own.")
             return "Cannot review a game you do not own."
             
     return "OK"
 
 
 @router.post("/{account_id}/wishlist/{game_sku}")
-def add_review(account_id: int, game_sku: str):
+def add_to_wishlist(account_id: int, game_sku: str):
      with db.engine.begin() as connection:
         # Integrity Error check
         try:
@@ -202,21 +203,46 @@ def add_review(account_id: int, game_sku: str):
                 }]
             ).scalar_one()
 
-            connection.execute(
+            already_purchased = (connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
+                    """
+                    SELECT 
+                        COUNT(*)
+                    FROM purchases 
+                    WHERE 
+                        account_id = :account_id AND game_id = :game_id
+                    """
                 ),
-
                 [{
                     "account_id": account_id,
                     "game_id": game_id
                 }]
+            ).scalar_one() > 0)
 
-            )
+            if not already_purchased:
 
-            return {
-                "success": True
-            }
+                connection.execute(
+                    sqlalchemy.text(
+                        "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
+                    ),
+
+                    [{
+                        "account_id": account_id,
+                        "game_id": game_id
+                    }]
+
+                )
+
+                return {
+                    "success": True
+                }
+
+            else:
+                print("Game has already been purchased by user")
+
+                return {
+                    "success": False
+                }
         
         except IntegrityError as e:
             print("Account already wishlisted this game.")
