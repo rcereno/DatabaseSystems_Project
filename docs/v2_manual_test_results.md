@@ -5,7 +5,7 @@ User Story: As a gamer, I want to be able to wishlist games I
 want so that I can keep track of what I am interested in buying.
 
 Scenario: Lyon Forester wants to add "GOLF IT" to his wishlist 
-for future purchase.
+for future purchases.
 
 Add to Wishlist
 Endpoint: PUT /accounts/21/wishlist/golf_it_0
@@ -556,4 +556,5 @@ RESPONSE
 ```
 
 NOTE
-response is okay
+
+REVIEWS TABLE IS UPDATED
