@@ -56,26 +56,32 @@ keeps track of my owned games, wishlist, cart, billing (and other customer info)
 Scenario: Eugene Fitzherbert wants to check the details of his account, including 
 his owned games and items on his wishlist.
 
-
-```
-{
-    "customer_name": "MarkD",
-    "account_id": 789
-}
-```
-
-
+curl -X 'POST' \
+  'https://redx-brri.onrender.com/accounts/23/view' \
+  -H 'accept: application/json' \
+  -H 'access_token: redx' \
+  -d ''
+  
 RESPONSE
 
+```
+  {
+  "customer_name": "Eugene Fitzherbert",
+  "games_owned": [
+    "ANIMAL CROSSING: NEW HORIZONS",
+    "IT TAKES TWO"
+  ],
+  "wishlist": [
+    "GOLF IT"
+  ],
+  "current_cart": "Games in cart: 0, Cost: 0"
+}
 
 ```
-{
-    "customer_name": "MarkD",
-    "games_owned": ["Red Rawr Heros", "Am I Dead lol"],
-    "wishlist": ["Gyat IV"],
-    "current_cart": 102
-}
-```
+NOTE
+
+Called right after we checked out
+
 
 
 Example Flow 4: Register Account / Purchase Games
@@ -117,7 +123,7 @@ curl -X 'GET' \
   'https://redx-brri.onrender.com/catalog/' \
   -H 'accept: application/json'
 
-RESPONCE
+RESPONSE
 
  ```
 [
