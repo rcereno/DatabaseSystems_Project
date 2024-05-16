@@ -60,13 +60,12 @@ def account_view(account_id: int):
                 JOIN games
                 ON games.id = purchases.game_id
                 WHERE purchases.account_id = :account_id
-                ORDER BY play_time DESC
                 """
             ),
             [{
                 "account_id": account_id
             }]
-        ).fetchall()
+        ).scalars()
         games = []
         for game in games_owned:
             games.append(game)
@@ -83,7 +82,7 @@ def account_view(account_id: int):
             [{
                 "account_id": account_id
             }]
-        ).fetchall()
+        ).scalars()
         wishlisted = []
         for game_w in wishlist:
             wishlisted.append(game_w)
