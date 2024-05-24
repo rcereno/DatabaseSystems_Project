@@ -214,38 +214,6 @@ A call to reset shop will delete all inventory and in-flight carts and reset gol
 shop should take this as an opportunity to remove all of their inventory and set their gold back to
 100 as well.
 
-### 5. Info Functions
-
-### .1. Current time - `/info/current_time` (POST)
-
-Shares what the latest time (in game time) is.
-
-**Request**:
-
-```json
-[
-  {
-    "day": "string",
-    "hour": "number"
-  }
-]
-```
-
-### 6. Audit Functions
-
-### 6.1. Get Inventory Summary - `/inventory/audit` (GET)
-
-Return a summary of your current number of games and total shop's money.
-
-**Response**:
-
-```json
-{
-  "number_of_games: "number",
-  "money": "number"
-)
-```
-
 ### 9. Review game - '/games/{game_id}/reviews' (PUT)
 
 Add review of up to five stars into a game's review data.
@@ -264,6 +232,6 @@ Add review of up to five stars into a game's review data.
 
 ```json
 {
-  "success" : "boolean"
-)
+  "success": "boolean"
+}
 ```
