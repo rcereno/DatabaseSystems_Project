@@ -1,7 +1,7 @@
 import sqlalchemy
 from src.api import database as db
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
@@ -23,14 +23,20 @@ class Account(BaseModel):
 def register_customer(customer: Account):
     """ """
     with db.engine.begin() as connection:       
-        connection.execute(
-            sqlalchemy.text(
-                "INSERT INTO accounts (email, name) VALUES (:email, :name)"
-            ),
-            {"name": customer.customer_name, "email": customer.customer_email}
-        )
+        try: 
+            acc_id = connection.execute(
+                sqlalchemy.text(
+                    "INSERT INTO accounts (email, name) VALUES (:email, :name) returning id"
+                ),
+                {"name": customer.customer_name, "email": customer.customer_email}
+            ).scalar_one()
+        except IntegrityError:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account with email already exists"
+            )
+        
     
-    return "OK"
+    return {"account_id": acc_id}
 
 @router.post("/{account_id}/view")
 def account_view(account_id: int):
