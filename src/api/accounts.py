@@ -44,6 +44,7 @@ def account_view(account_id: int):
     """
 
     with db.engine.begin() as connection: 
+        
         name = connection.execute(
             sqlalchemy.text(
                 """
@@ -57,6 +58,13 @@ def account_view(account_id: int):
                 "account_id": account_id
             }]
         ).scalar()
+        
+        if name is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account does not exist"
+            )
+
+        
 
         games_owned = connection.execute(
             sqlalchemy.text(
