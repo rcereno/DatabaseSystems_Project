@@ -15,6 +15,19 @@ Let's say two users, Henry and Hamilton, are simultaneously trying to check out 
 **Sequence Diagram: still making it in progress**
 ```mermaid
 sequenceDiagram  
+    participant Henry
+    participant Database
+    participant Hamilton
+
+    <!-- Note over Henry, Hamilton:  -->
+    Henry->>Database: Retrieve cart info
+    Database->>Hamilton: Retrieve cart info
+    Hamilton->>Database: Return cart info
+    Database->>Henry: Return cart info:
+    Henry->>Database: Update cart as checked
+    Database->>Hamilton: Update cart as checked
+    Hamilton->>Database: Cart updated successfully
+    Database->>Henry: Cart updated successfully
 ```
 
 
