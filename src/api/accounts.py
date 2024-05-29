@@ -1,7 +1,7 @@
 import sqlalchemy
 from src.api import database as db
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
@@ -22,24 +22,21 @@ class Account(BaseModel):
 @router.post("/{customer_id}/register")
 def register_customer(customer: Account):
     """ """
-    try:
-        with db.engine.begin() as connection:       
-            connection.execute(
+    with db.engine.begin() as connection:       
+        try: 
+            acc_id = connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO accounts (email, name) VALUES (:name, :email)"
+                    "INSERT INTO accounts (email, name) VALUES (:email, :name) returning id"
                 ),
                 {"name": customer.customer_name, "email": customer.customer_email}
+            ).scalar_one()
+        except IntegrityError:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account with email already exists"
             )
-    except IntegrityError:
-        return {
-            "success": False,
-            "msg": "Account with email already exists"
-        }
+        
     
-    return {
-        "success": True,
-        "msg": "Account successfully registered"
-    }
+    return {"account_id": acc_id}
 
 @router.post("/{account_id}/view")
 def account_view(account_id: int):
@@ -47,6 +44,7 @@ def account_view(account_id: int):
     """
 
     with db.engine.begin() as connection: 
+        
         name = connection.execute(
             sqlalchemy.text(
                 """
@@ -60,6 +58,13 @@ def account_view(account_id: int):
                 "account_id": account_id
             }]
         ).scalar()
+        
+        if name is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Account does not exist"
+            )
+
+        
 
         games_owned = connection.execute(
             sqlalchemy.text(
@@ -69,13 +74,12 @@ def account_view(account_id: int):
                 JOIN games
                 ON games.id = purchases.game_id
                 WHERE purchases.account_id = :account_id
-                ORDER BY play_time DESC
                 """
             ),
             [{
                 "account_id": account_id
             }]
-        ).fetchall()
+        ).scalars()
         games = []
         for game in games_owned:
             games.append(game)
@@ -92,7 +96,7 @@ def account_view(account_id: int):
             [{
                 "account_id": account_id
             }]
-        ).fetchall()
+        ).scalars()
         wishlisted = []
         for game_w in wishlist:
             wishlisted.append(game_w)
@@ -198,10 +202,8 @@ def add_review(account_id: int, game_sku: str, review: Review):
                 }]
             )
         else:
-            return {
-                "success": False,
-                "msg": "Cannot review a game you do not own."
-            }
+            print("Cannot review a game you do not own.")
+            return "Cannot review a game you do not own."
             
     return {
                 "success": True,
@@ -210,7 +212,7 @@ def add_review(account_id: int, game_sku: str, review: Review):
 
 
 @router.post("/{account_id}/wishlist/{game_sku}")
-def add_review(account_id: int, game_sku: str):
+def add_to_wishlist(account_id: int, game_sku: str):
      with db.engine.begin() as connection:
         # Integrity Error check
         try:
@@ -222,23 +224,48 @@ def add_review(account_id: int, game_sku: str):
                     "game_sku": game_sku
                 }]
             ).scalar_one()
-        except NoResultFound:
-            return {
-                "success": False,
-                "msg": "This game does not exist in inventory."
-            }
-        try:
-            connection.execute(
-                sqlalchemy.text(
-                    "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
-                ),
 
+            already_purchased = (connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT 
+                        COUNT(*)
+                    FROM purchases 
+                    WHERE 
+                        account_id = :account_id AND game_id = :game_id
+                    """
+                ),
                 [{
                     "account_id": account_id,
                     "game_id": game_id
                 }]
+            ).scalar_one() > 0)
 
-            )
+            if not already_purchased:
+
+                connection.execute(
+                    sqlalchemy.text(
+                        "INSERT INTO wishlisted (account_id, game_id) VALUES (:account_id, :game_id)"
+                    ),
+
+                    [{
+                        "account_id": account_id,
+                        "game_id": game_id
+                    }]
+
+                )
+
+                return {
+                    "success": True
+                }
+
+            else:
+                print("Game has already been purchased by user")
+
+                return {
+                    "success": False
+                }
+        
         except IntegrityError as e:
             return {
                 "success": False,
