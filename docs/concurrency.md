@@ -19,7 +19,6 @@ sequenceDiagram
     participant Database
     participant Hamilton
 
-    <!-- Note over Henry, Hamilton:  -->
     Henry->>Database: Retrieve cart info
     Database->>Hamilton: Retrieve cart info
     Hamilton->>Database: Return cart info
