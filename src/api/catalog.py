@@ -1,7 +1,7 @@
 import sqlalchemy
 from src.api import database as db
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
@@ -154,4 +154,71 @@ def search_catalog(
 
 
     return json
+
+
+@router.get("/catalog/trending/", tags=["catalog"])
+def trending_catalog(time_unit: str = "day"):
+    number_of_days = 0
+
+    match time_unit:
+        case "day": 
+            number_of_days = 1
+        case "week":
+            number_of_days = 7
+        case "month":
+            number_of_days = 30
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Given unit of time is invalid or unsupported"
+            )
+    
+    with db.engine.connect() as connection:
+        results = connection.execute(
+            sqlalchemy.text(
+                """
+                with game_ids as (
+                    select 
+                        game_id,
+                        sum(review) as recent_stars
+                    from reviews
+                    where review >= 4 and EXTRACT(EPOCH FROM (current_timestamp - created_at)) <= 3600 * 24 * :days
+                    group by game_id
+                    order by recent_stars
+                    limit 5
+                )
+
+                select
+                    item_sku, 
+                    name, 
+                    publisher, 
+                    price_in_cents, 
+                    genre, 
+                    platform, 
+                    family_rating,
+                    release_date,
+                    review
+                from game_ids
+                join games on game_ids.game_id = games.id
+                join avg_review_view as rev_view on game_ids.game_id = rev_view.game_id
+                """
+            ),
+            {"days": number_of_days}
+        )
+
+        json = []
+
+        for game in results:
+            json.append(
+                {"sku": game.item_sku, 
+                 "name": game.name, 
+                 "publisher": game.publisher, 
+                 "price": game.price_in_cents, 
+                 "genre": game.genre, 
+                 "platform": game.platform, 
+                 "avg_review": (game.review if game.review != -1 else "NOT YET REVIEWED"),
+                 "rating": game.family_rating,
+                 "release_date": game.release_date})
+
+
+        return json
 
