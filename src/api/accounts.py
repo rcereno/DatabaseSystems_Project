@@ -271,10 +271,6 @@ def add_to_wishlist(account_id: int, game_sku: str):
                 "success": False,
                 "msg": "Account already wishlisted this game."
             }
-        return {
-                "success": True,
-                "msg": "Game successfully added to wishlist."
-            }
     
 def format_game_recommendations(games):
     res = []
@@ -409,4 +405,4 @@ def recommend_game(account_id: int):
         
         top_games = [game[0] for game in scored_games[:5]]
 
-        return {"recommendations": format_game_recommendations(top_games)}
+        return format_game_recommendations(top_games)

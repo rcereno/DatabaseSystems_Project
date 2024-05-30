@@ -1,7 +1,7 @@
 import sqlalchemy
 from src.api import database as db
 import datetime
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from src.api import auth
 
@@ -42,8 +42,13 @@ def add_to_game_inventory(games: list[Game]):
             }
         )
     with db.engine.begin() as connection:
-        connection.execute(
-        sqlalchemy.insert(game_table),
-            games_to_add,
-        )
+        try: 
+            connection.execute(
+            sqlalchemy.insert(game_table),
+                games_to_add,
+            )
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Game with sku already exists"
+            )
     return "Games added"

@@ -13,6 +13,7 @@ The API's:
 7. `Account view`
 8. `Add to wish list`
 9. `Review game`
+10. `Recommend Game`
 
 ### 1. Get Catalog - `/catalog/` (GET)
 
@@ -30,7 +31,8 @@ Retrieves the catalog of items. Each unique item combination should have only a 
     "genre": "string",
     "platform": "string",
     "mode_review": "integer" /*between 1-5 for 1-5 stars*/,
-    "rating": "string" /*Rating for the game*/
+    "family_rating": "string" /*Rating for the game*/,
+    "release_date": "string"
   }
 ]
 ```
@@ -223,4 +225,25 @@ Add review of up to five stars into a game's review data.
 {
   "success": "boolean"
 }
+```
+
+### 10. Recommend game - '/accounts/{account_id}/recommend' (POST)
+
+Recommend 5 games based on account's highly reviewed games, purchased games, and wishlisted games. Highly reviewed games' attributes are weighted heaviest, then purchased games, then wishlisted games. If an account has not reviewed, purchased, or wishlisted any games then recommend 5 random games.
+
+**Response:**
+
+```json
+[
+  {
+    "sku": "string" /* Matching regex ^[a-zA-Z0-9_]{1,50}$ */,
+    "name": "string",
+    "publisher": "string",
+    "price": "integer" /* Between 1 and 500 */,
+    "genre": "string",
+    "platform": "string",
+    "family_rating": "string" /*Rating for the game*/,
+    "release_date": "string" /*Date format YYYY-MM-DD*/
+  }
+]
 ```
