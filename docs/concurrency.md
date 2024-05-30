@@ -104,5 +104,5 @@ sequenceDiagram
     Database->>Liam: Return task list (Tasks: A, B, C)
 ```
 
-**Solution:**
+**Solution: **
 To prevent phantom reads, you can use the SERIALIZABLE isolation level for Liam's transaction. This ensures that Liam's transaction sees a consistent snapshot of the data and prevents other transactions from introducing new rows that would affect Liam's transaction. 
