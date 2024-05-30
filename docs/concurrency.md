@@ -49,7 +49,7 @@ Christa's transaction updates the account balance to $1500 and commits the chang
 Yelizaveta's transaction reads the account balance again, expecting to see $1000, but instead retrieves the updated balance of $1500.
 
 **Sequence Diagram:**
-```mermaid
+```mermaid 
 sequenceDiagram  
     participant Yelizaveta
     participant Database
