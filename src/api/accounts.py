@@ -300,7 +300,7 @@ def recommend_game(account_id: int):
         reviews = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
                 FROM reviews r 
                 JOIN games g ON r.game_id = g.id
                 WHERE r.account_id = :account_id AND r.review >= 3
@@ -311,7 +311,7 @@ def recommend_game(account_id: int):
         purchases = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
                 FROM purchases p
                 JOIN games g ON p.game_id = g.id
                 WHERE p.account_id = :account_id
@@ -323,7 +323,7 @@ def recommend_game(account_id: int):
         wishlists = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
                 FROM wishlisted w
                 JOIN games g ON w.game_id = g.id
                 WHERE w.account_id = :account_id
@@ -331,6 +331,25 @@ def recommend_game(account_id: int):
             ),
             {"account_id": account_id}
         ).fetchall()
+
+         # get poorly rated games
+        low_rated_games = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT g.id
+                FROM reviews r
+                JOIN games g ON r.game_id = g.id
+                WHERE r.account_id = :account_id AND r.review < 3
+                """
+            ),
+            {"account_id": account_id}
+        ).fetchall()
+
+        #Game Ids to not exclude from recommendations
+        exclude_game_ids = set()
+        for entry in reviews + purchases + wishlists + low_rated_games:
+            exclude_game_ids.add(entry.id)
+
         # Calculate preferences based on the above data
         preferences = {"genre": {}, "publisher": {}, "platform": {}, "family_rating": {}}
         num_entries = 0
@@ -363,17 +382,20 @@ def recommend_game(account_id: int):
         update_preferences(reviews)
         update_preferences(purchases)
         update_preferences(wishlists)
+
         print("prefs: ", preferences)
         if num_entries == 0:
             # Recommend 5 random games if no data is available
             random_games_stmt = """
                 SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date
                 FROM games
+                WHERE id NOT IN :exclude_game_ids
                 ORDER BY RANDOM()
                 LIMIT 5
             """
-            random_games = connection.execute(sqlalchemy.text(random_games_stmt)).fetchall()
+            random_games = connection.execute(sqlalchemy.text(random_games_stmt), {"exclude_game_ids": tuple(exclude_game_ids)}).fetchall()
             return {"recommendations": format_game_recommendations(random_games)}
+        
         for key in preferences:
             total = sum(preferences[key].values())
             for subkey in preferences[key]:
@@ -381,10 +403,11 @@ def recommend_game(account_id: int):
 
          # Fetch all games
         all_games_stmt = """
-            SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date
+            SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date, id
             FROM games
+            WHERE id NOT IN :exclude_game_ids
         """
-        all_games = connection.execute(sqlalchemy.text(all_games_stmt)).fetchall()
+        all_games = connection.execute(sqlalchemy.text(all_games_stmt), {"exclude_game_ids": tuple(exclude_game_ids)}).fetchall()
          # Calculate preference scores
         def calculate_preference_score(game):
             genre_score = sum(preferences["genre"].get(genre, 0) for genre in game.genre.split(", "))
