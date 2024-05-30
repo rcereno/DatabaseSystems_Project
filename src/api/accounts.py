@@ -275,3 +275,127 @@ def add_to_wishlist(account_id: int, game_sku: str):
                 "success": True,
                 "msg": "Game successfully added to wishlist."
             }
+    
+def format_game_recommendations(games):
+    res = []
+    for game in games: 
+        res.append(
+            {
+                "item_sku": game.item_sku,
+                "name": game.name,
+                "publisher": game.publisher,
+                "price_in_cents": game.price_in_cents,
+                "genre": game.genre,
+                "platform": game.platform,
+                "family_rating": game.family_rating,
+                "release_date": game.release_date,
+            }
+        )
+    return res
+
+@router.post("/{account_id}/recommend")
+def recommend_game(account_id: int):
+    with db.engine.begin() as connection:
+        # get games they reviewed highly
+        reviews = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                FROM reviews r 
+                JOIN games g ON r.game_id = g.id
+                WHERE r.account_id = :account_id AND r.review >= 3
+                """
+            ), {"account_id": account_id}
+        ).fetchall()
+        # get purchased games
+        purchases = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                FROM purchases p
+                JOIN games g ON p.game_id = g.id
+                WHERE p.account_id = :account_id
+                """
+            ),
+            {"account_id": account_id}
+        ).fetchall()
+        # if none purchased, use wishlisted
+        wishlists = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT g.genre, g.publisher, g.platform, g.family_rating
+                FROM wishlisted w
+                JOIN games g ON w.game_id = g.id
+                WHERE w.account_id = :account_id
+                """
+            ),
+            {"account_id": account_id}
+        ).fetchall()
+        # Calculate preferences based on the above data
+        preferences = {"genre": {}, "publisher": {}, "platform": {}, "family_rating": {}}
+        num_entries = 0
+
+        def update_preferences(source):
+            nonlocal num_entries
+            for entry in source:
+                num_entries += 1
+                genres = entry[0].split(", ")
+                for genre in genres:
+                    if genre not in preferences["genre"]:
+                        preferences["genre"][genre] = 0
+                    preferences["genre"][genre] += 1
+                
+                publisher = entry[1]
+                if publisher not in preferences["publisher"]:
+                    preferences["publisher"][publisher] = 0
+                preferences["publisher"][publisher] += 1
+
+                platform = entry[2]
+                if platform not in preferences["platform"]:
+                    preferences["platform"][platform] = 0
+                preferences["platform"][platform] += 1
+
+                family_rating = entry[3]
+                if family_rating not in preferences["family_rating"]:
+                    preferences["family_rating"][family_rating] = 0
+                preferences["family_rating"][family_rating] += 1
+        
+        update_preferences(reviews)
+        update_preferences(purchases)
+        update_preferences(wishlists)
+        print("prefs: ", preferences)
+        if num_entries == 0:
+            # Recommend 5 random games if no data is available
+            random_games_stmt = """
+                SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date
+                FROM games
+                ORDER BY RANDOM()
+                LIMIT 5
+            """
+            random_games = connection.execute(sqlalchemy.text(random_games_stmt)).fetchall()
+            return {"recommendations": format_game_recommendations(random_games)}
+        for key in preferences:
+            total = sum(preferences[key].values())
+            for subkey in preferences[key]:
+                preferences[key][subkey] /= total
+
+         # Fetch all games
+        all_games_stmt = """
+            SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date
+            FROM games
+        """
+        all_games = connection.execute(sqlalchemy.text(all_games_stmt)).fetchall()
+         # Calculate preference scores
+        def calculate_preference_score(game):
+            genre_score = sum(preferences["genre"].get(genre, 0) for genre in game.genre.split(", "))
+            publisher_score = preferences["publisher"].get(game.publisher, 0)
+            platform_score = preferences["platform"].get(game.platform, 0)
+            family_rating_score = preferences["family_rating"].get(game.family_rating, 0)
+            return genre_score + publisher_score + platform_score + family_rating_score
+
+        scored_games = [(game, calculate_preference_score(game)) for game in all_games]
+        scored_games.sort(key=lambda x: x[1], reverse=True)
+        
+        top_games = [game[0] for game in scored_games[:5]]
+
+        return {"recommendations": format_game_recommendations(top_games)}
