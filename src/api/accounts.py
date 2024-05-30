@@ -307,6 +307,7 @@ def recommend_game(account_id: int):
                 """
             ), {"account_id": account_id}
         ).fetchall()
+        reviewed_games_id = {entry.id for entry in reviews}
         # get purchased games
         purchases = connection.execute(
             sqlalchemy.text(
@@ -314,10 +315,10 @@ def recommend_game(account_id: int):
                 SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
                 FROM purchases p
                 JOIN games g ON p.game_id = g.id
-                WHERE p.account_id = :account_id
+                WHERE p.account_id = :account_id AND g.id NOT IN :reviewed_game_ids
                 """
             ),
-            {"account_id": account_id}
+            {"account_id": account_id, "reviewed_game_ids": tuple(reviewed_games_id)}
         ).fetchall()
         # if none purchased, use wishlisted
         wishlists = connection.execute(
@@ -332,29 +333,16 @@ def recommend_game(account_id: int):
             {"account_id": account_id}
         ).fetchall()
 
-         # get poorly rated games
-        low_rated_games = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT g.id
-                FROM reviews r
-                JOIN games g ON r.game_id = g.id
-                WHERE r.account_id = :account_id AND r.review < 3
-                """
-            ),
-            {"account_id": account_id}
-        ).fetchall()
-
         #Game Ids to not exclude from recommendations
         exclude_game_ids = set()
-        for entry in reviews + purchases + wishlists + low_rated_games:
+        for entry in reviews + purchases + wishlists:
             exclude_game_ids.add(entry.id)
 
         # Calculate preferences based on the above data
         preferences = {"genre": {}, "publisher": {}, "platform": {}, "family_rating": {}}
         num_entries = 0
 
-        def update_preferences(source):
+        def update_preferences(source, weight):
             nonlocal num_entries
             for entry in source:
                 num_entries += 1
@@ -362,26 +350,26 @@ def recommend_game(account_id: int):
                 for genre in genres:
                     if genre not in preferences["genre"]:
                         preferences["genre"][genre] = 0
-                    preferences["genre"][genre] += 1
+                    preferences["genre"][genre] += weight
                 
                 publisher = entry[1]
                 if publisher not in preferences["publisher"]:
                     preferences["publisher"][publisher] = 0
-                preferences["publisher"][publisher] += 1
+                preferences["publisher"][publisher] += weight
 
                 platform = entry[2]
                 if platform not in preferences["platform"]:
                     preferences["platform"][platform] = 0
-                preferences["platform"][platform] += 1
+                preferences["platform"][platform] += weight
 
                 family_rating = entry[3]
                 if family_rating not in preferences["family_rating"]:
                     preferences["family_rating"][family_rating] = 0
-                preferences["family_rating"][family_rating] += 1
+                preferences["family_rating"][family_rating] += weight
         
-        update_preferences(reviews)
-        update_preferences(purchases)
-        update_preferences(wishlists)
+        update_preferences(reviews, weight=3)
+        update_preferences(purchases, weight=2)
+        update_preferences(wishlists, weight=1)
 
         print("prefs: ", preferences)
         if num_entries == 0:
