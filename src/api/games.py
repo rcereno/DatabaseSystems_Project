@@ -46,4 +46,4 @@ def add_to_game_inventory(games: list[Game]):
         sqlalchemy.insert(game_table),
             games_to_add,
         )
-    return "Game added"
+    return "Games added"

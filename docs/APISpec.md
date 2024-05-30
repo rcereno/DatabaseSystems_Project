@@ -90,13 +90,27 @@ Handles the checkout process for a specific cart.
 }
 ```
 
+### 5. View Cart - `/carts/{account_id}/{cart_id}` (POST)
+
+View current cart of the customer
+
+**Response**:
+
+```json
+{
+  "cart_id": "integer",
+  "customer_name": "string",
+  "games_in_cart": "integer",
+  "total_cost": "integer"
+}
+```
+
 ### 6. Search Games in Catalog - `/catalog/search/` (GET)
 
 Searches for games based on specified query parameters.
 
 **Query Parameters**:
 
-- `customer_name` (optional): The name of the customer.
 - `game_sku` (optional): The SKU of the game.
 - `search_page` (optional): The page number of the search results.
 - `sort_col` (optional): The column to sort the results by. Possible values: `game_name`, `price`, `publisher`, `platform`, `mode_review`, `genre`, `release_date`. Default: `release_date`.
@@ -109,13 +123,13 @@ The API returns a JSON object with the following structure:
 - `previous`: A string that represents the link to the previous page of results. If there is no previous page, this value is an empty string.
 - `next`: A string that represents the link to the next page of results. If there is no next page, this value is an empty string.
 - `results`: An array of objects, each representing a line item. Each line item object has the following properties:
-  - `line_item_id`: An integer that represents the unique identifier of the line item.
   - `game_sku`: A string that represents the SKU of the game.
   - `price`: An integer representing the price of the game
   - `publisher`: A string that represents the publisher of the game
   - `platform`: A string that represents the platform the game is available on.
   - `mode_review`: A number representing the most frequently given star review.
   - `genre`: A string representing the genre of the game.
+  - `family_rating `: A string representing the rating of the game.
   - `release_date`: A string that represents the date and time when the game was released. This is in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).
 
 ### 7. Account Management
@@ -137,72 +151,47 @@ A call customers can make to register their account.
 
 ```json
 {
-  "success": "boolean"
+  "success": "boolean",
+  "msg": "string"
 }
 ```
 
-### 7.2 Account View- `/view_account/{account_id}` (GET)
-
-**Request**:
-
-```json
-{
-  "customer_name": "string",
-  "account_id": "integer"
-}
-```
+### 7.2 Account View- `/{account_id}/view` (GET)
 
 **Reponse**
 
 ```json
 {
-    "customer_name": "string",
-    "games_owned": ["string"]  /*an array of strings representing the names of games that the customer owns*/
-    "wishlist": ["string"]  /*an array of strings representing the names of games that the customer wants*/
-    "current_cart": "integer" /*an integer representing the cart_id of their current cart, if one exists*/
-}
-```
-
-### 7.3 Cart View- `/{account_id}/carts/{cart_id}` (GET)
-
-An API call that lets customers view their current cart, if one exists.
-**Request**:
-
-```json
-{
   "customer_name": "string",
-  "account_id": "integer"
+  "games_owned": ["string"], /*an array of strings representing the names of games that the customer owns*/,
+  "wishlist": ["string"], /*an array of strings representing the names of games that the customer wants*/,
+  "current_cart": "Games in cart: {games_in_cart}, Cost: {cost}" /*string showing current cart contents*/
 }
 ```
 
-**Reponse**
-
-```json
-{
-    "cart_id": "integer" /*an integer representing the cart_id of the cart, if one exists*/
-    "customer_name": "string",
-    "games_in_cart": ["string"]  /*an array of strings representing the names of games that the customer has in their cart*/
-    "total_cost": "integer" /*an integer representing the cost of their total cart*/
-}
-```
-
-### 8. Add to wishlist- `/{item_sku}/wishlist/{account_id}` (PUT)
+### 8. Add to wishlist- `/{account_id}/wishlist/{game_sku}` (PUT)
 
 An API call that allows a customer to add a specific game to their account wishlist.
-**Request**:
-
-```json
-{
-  "customer_name": "string",
-  "account_id": "integer"
-}
-```
 
 **Reponse**
 
 ```json
 {
-  "success": "boolean"
+  "success": "boolean",
+  "msg": "string"
+}
+```
+
+### 9. Review game- `/{account_id}/reviews/{game_sku}` (PUT)
+
+An API call that allows a customer to review a game.
+
+**Reponse**
+
+```json
+{
+  "success": "boolean",
+  "msg": "string"
 }
 ```
 

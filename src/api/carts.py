@@ -143,7 +143,7 @@ def set_item_quantity(cart_id: int, item_sku: str):
             print("Game already in cart")
             return "OK"
 
-    return "OK"
+    return {"success": True}
 
 
 # class CartCheckout(BaseModel):
