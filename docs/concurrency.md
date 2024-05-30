@@ -48,7 +48,7 @@ Yelizaveta's transaction reads the account balance as $1000.
 Christa's transaction updates the account balance to $1500 and commits the changes.
 Yelizaveta's transaction reads the account balance again, expecting to see $1000, but instead retrieves the updated balance of $1500.
 
-**Sequence Diagram:**
+**Sequence Diagram (with Solution):**
 ```mermaid 
 sequenceDiagram  
     participant Yelizaveta
@@ -86,10 +86,22 @@ Noah commits his transaction, making the new task visible to others.
 Liam's transaction queries the task list again, expecting to see the same set of tasks as before.
 However, Liam's transaction now retrieves the updated task list, which includes the newly added task by Noah.
 
-**Sequence Diagram:**
+**Sequence Diagram (with Solution):**
 ```mermaid
 sequenceDiagram  
+    participant Liam
+    participant Database
+    participant Noah
 
+    Liam->>Database: Start transaction
+    Liam->>Database: Retrieve task list
+    Database->>Liam: Return task list (Tasks: A, B)
+    Noah->>Database: Start transaction
+    Noah->>Database: Add task C
+    Database->>Noah: Task C added
+    Noah->>Database: Commit
+    Liam->>Database: Retrieve task list
+    Database->>Liam: Return task list (Tasks: A, B, C)
 ```
 
 **Solution:**
