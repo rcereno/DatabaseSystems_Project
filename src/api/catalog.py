@@ -2,7 +2,7 @@ import sqlalchemy
 from src.api import database as db
 from enum import Enum
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
