@@ -21,7 +21,7 @@ class Account(BaseModel):
 
 @router.post("/{customer_id}/register")
 def register_customer(customer: Account):
-    """ """
+    """Register's a customer with their name and email, returns their account_id"""
     with db.engine.begin() as connection:       
         try: 
             acc_id = connection.execute(
@@ -40,8 +40,7 @@ def register_customer(customer: Account):
 
 @router.post("/{account_id}/view")
 def account_view(account_id: int):
-    """
-    """
+    """Using account_id, a customer can view their account to display purchased games, wishlisted games, and their current cart if it exists."""
 
     with db.engine.begin() as connection: 
         
@@ -150,7 +149,7 @@ class Review(BaseModel):
 
 @router.post("/{account_id}/reviews/{game_sku}")
 def add_review(account_id: int, game_sku: str, review: Review):
-    """ """
+    """Allows account to leave review on game."""
 
     with db.engine.begin() as connection:
         try:
@@ -213,6 +212,7 @@ def add_review(account_id: int, game_sku: str, review: Review):
 
 @router.post("/{account_id}/wishlist/{game_sku}")
 def add_to_wishlist(account_id: int, game_sku: str):
+     """Allows account to wishlist game."""
      with db.engine.begin() as connection:
         # Integrity Error check
         try:
@@ -273,6 +273,7 @@ def add_to_wishlist(account_id: int, game_sku: str):
             }
     
 def format_game_recommendations(games):
+    """helper function to format the json response for game recommendations"""
     res = []
     for game in games: 
         res.append(
@@ -291,6 +292,7 @@ def format_game_recommendations(games):
 
 @router.post("/{account_id}/recommend")
 def recommend_game(account_id: int):
+    """Accounting for highly reviewed games, purchased games, and wishlisted games, recommend a specific account 5 games."""
     with db.engine.begin() as connection:
         # get games they reviewed highly
         reviews = connection.execute(

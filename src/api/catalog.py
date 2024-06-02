@@ -77,6 +77,7 @@ def search_catalog(
     search_page: str = "",
     sort_col: search_sort_options = search_sort_options.release_date,
     sort_order: search_sort_order = search_sort_order.desc):
+    """Allows user to search our catalog with many search options/order."""
 
     query = (
             sqlalchemy.select(
@@ -155,6 +156,7 @@ def search_catalog(
 
 @router.get("/catalog/trending/", tags=["catalog"])
 def trending_catalog(time_unit: str = "day"):
+    """Retrieves the recently trending games based on recent reviews."""
     number_of_days = 0
 
     match time_unit:

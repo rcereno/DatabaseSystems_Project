@@ -26,7 +26,7 @@ class Customer(BaseModel):
 
 @router.post("/")
 def create_cart(customer: Customer):
-    """ """
+    """Using account_id, create a cart for that account."""
 
     with db.engine.begin() as connection:
 
@@ -49,6 +49,7 @@ def create_cart(customer: Customer):
 
 @router.get("/{cart_id}")
 def cart_view(cart_id: int):
+    """Using cart_id, view the cart's items and total cost."""
     games_in_cart = []
     cost = 0
     with db.engine.begin() as connection:   
@@ -101,7 +102,7 @@ def cart_view(cart_id: int):
 @router.post("/{cart_id}/items/{item_sku}")
 # def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 def set_item_quantity(cart_id: int, item_sku: str):
-    """ """
+    """Add a specific game to a cart using cart_id."""
 
     with db.engine.begin() as connection:       
         gameId_price = connection.execute(
@@ -152,7 +153,7 @@ def set_item_quantity(cart_id: int, item_sku: str):
 @router.post("/{cart_id}/checkout")
 # def checkout(cart_id: int, cart_checkout: CartCheckout):
 def checkout(cart_id: int):
-    """ """
+    """Checkout cart using cart_id."""
     
     try:
 

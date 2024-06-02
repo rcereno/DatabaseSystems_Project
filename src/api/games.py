@@ -27,6 +27,7 @@ class Game(BaseModel):
 
 @router.post("/add")
 def add_to_game_inventory(games: list[Game]):
+    """For shop keeper's use, add games to inventory."""
     games_to_add = []
     for game in games:
         games_to_add.append(

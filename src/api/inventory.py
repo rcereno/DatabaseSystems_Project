@@ -17,14 +17,7 @@ router = APIRouter(
 
 @router.get("/audit")
 def get_inventory():
-    """ """
-    # with db.engine.begin() as connection:       
-    #     connection.execute(
-    #         sqlalchemy.text(
-    #             "INSERT INTO accounts (email, name) VALUES (:name, :email)"
-    #         ),
-    #         {"name": customer.customer_name, "email": customer.customer_email}
-    #     
+    """Retrieves shop's total games sold and money made."""
     with db.engine.begin() as connection:
         inventoryItems = connection.execute(sqlalchemy.text(
             '''SELECT 
