@@ -10,13 +10,13 @@ from enum import Enum
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import APIRouter
-metadata_obj = sqlalchemy.MetaData()
-games = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
+# metadata_obj = sqlalchemy.MetaData()
+# games = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
 router = APIRouter()
 
-metadata_obj = sqlalchemy.MetaData()
-metadata_obj.reflect(bind=db.engine, views=True)
-game_catalog = sqlalchemy.Table("game_catalog", metadata_obj, autoload_with=db.engine)
+# metadata_obj = sqlalchemy.MetaData()
+db.metadata_obj.reflect(bind=db.engine, views=True)
+game_catalog = sqlalchemy.Table("game_catalog", db.metadata_obj, autoload_with=db.engine)
 
 
 @router.get("/catalog/", tags=["catalog"])
@@ -83,32 +83,32 @@ def search_catalog(
     # selecting all the attributes we want to return back to the user later
     query = (
             sqlalchemy.select(
-                games.c.item_sku,
-                games.c.name,
-                games.c.price_in_cents,
-                games.c.publisher,
-                games.c.platform,
-                games.c.genre,
-                games.c.family_rating,
-                games.c.release_date
-            ).select_from(games))
+                db.games.c.item_sku,
+                db.games.c.name,
+                db.games.c.price_in_cents,
+                db.games.c.publisher,
+                db.games.c.platform,
+                db.games.c.genre,
+                db.games.c.family_rating,
+                db.games.c.release_date
+            ).select_from(db.games))
     with db.engine.begin() as connection:
         if game_sku:
-            query = query.where(games.c.item_sku.ilike(f"{game_sku}"))
+            query = query.where(db.games.c.item_sku.ilike(f"{game_sku}"))
         # map sort options to corresponding column
         sort_columns = {
-            search_sort_options.game_name: games.c.name,
-            search_sort_options.sku: games.c.item_sku,
-            search_sort_options.price: games.c.price_in_cents,
-            search_sort_options.publisher: games.c.publisher,
-            search_sort_options.platform: games.c.platform,
+            search_sort_options.game_name: db.games.c.name,
+            search_sort_options.sku: db.games.c.item_sku,
+            search_sort_options.price: db.games.c.price_in_cents,
+            search_sort_options.publisher: db.games.c.publisher,
+            search_sort_options.platform: db.games.c.platform,
             # search_sort_options.mode_review: games.c.mode_review,  # EDIT THIS
-            search_sort_options.genre: games.c.genre,
-            search_sort_options.family_rating: games.c.family_rating,
-            search_sort_options.release_date: games.c.release_date,
+            search_sort_options.genre: db.games.c.genre,
+            search_sort_options.family_rating: db.games.c.family_rating,
+            search_sort_options.release_date: db.games.c.release_date,
         }
         # get column for sorting based on dictionary
-        order_by = sort_columns.get(sort_col, games.c.release_date)
+        order_by = sort_columns.get(sort_col, db.games.c.release_date)
         # getting sort order
         if sort_order == search_sort_order.asc:
             query = query.order_by(order_by.asc())

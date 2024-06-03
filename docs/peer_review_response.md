@@ -1,10 +1,10 @@
 ## Code peer suggestions
 
-1. Add docstrings to endpoint functions where they don't exist: completed
+1. Add docstrings to endpoint functions where they don't exist: added docstrings to every endpoint for clarity
 2. Add more commenting: added more guiding comments throughout code to explain what it does more clearly
-3. Refactor catalog search, remove if/elif statements
-4. Search catalog parameters could be moved to a class to make the function’s argos easier to read/edit
-5. Remove commented out code
+3. Refactor catalog search, remove if/elif statements: changed to mapping our sort columns to the correct database column, just requires one get instead
+4. Search catalog parameters could be moved to a class to make the function’s argos easier to read/edit: The search sort col/sort order parameters are in a class already and we think the arguments are understandable/easily alterable as is.
+5. Remove commented out code: removed unneccessary commented out code
 6. Remove inventory/audit: We do not want to remove this as we want en endpoint that retrieves the shop's total games owned, sold and money made.
 7. Cart view: Combine the two queries into one with joins
 8. Make sure cart view is consistent with API spec

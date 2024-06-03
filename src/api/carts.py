@@ -8,12 +8,7 @@ from enum import Enum
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.exc import NoResultFound 
-metadata_obj = sqlalchemy.MetaData()
-carts = sqlalchemy.Table("carts", metadata_obj, autoload_with=db.engine)
-accounts = sqlalchemy.Table("accounts", metadata_obj, autoload_with=db.engine)
-cart_items = sqlalchemy.Table("cart_items", metadata_obj, autoload_with=db.engine)
-wishlisted = sqlalchemy.Table("wishlisted", metadata_obj, autoload_with=db.engine)
-purchased = sqlalchemy.Table("purchases", metadata_obj, autoload_with=db.engine)
+
 
 
 router = APIRouter(
@@ -230,10 +225,10 @@ def checkout(cart_id: int):
                 total_cost += cost
             # inserting into purchased table
             connection.execute(
-            sqlalchemy.insert(purchased),
+            sqlalchemy.insert(db.purchased),
                 to_purchase,
             )
-            
+
             games_in_cart, cost = connection.execute(
                 sqlalchemy.text(
                     """
