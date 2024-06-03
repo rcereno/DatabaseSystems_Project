@@ -200,7 +200,7 @@ An API call that allows a customer to review a game.
 
 ### 4.1. Reset Shop - `/admin/reset` (POST)
 
-A call to reset shop will delete all inventory and existing carts of the e-commerce game shop. Needs customer ID and cart of games to reset. The e-commerce game shop should take this as an opportunity to remove all of their inventory. 
+A call to reset shop will delete all inventory and existing carts of the e-commerce game shop. The e-commerce game shop should take this as an opportunity to remove all of their inventory. 
 
 ### 9. Review game - '/games/{game_id}/reviews' (PUT)
 
