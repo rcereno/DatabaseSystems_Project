@@ -136,103 +136,90 @@ def set_item_quantity(cart_id: int, item_sku: str):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int):
-    """Checkout cart using cart_id."""
+    """ """
     
     try:
-
         with db.engine.begin() as connection:
-            # remove from wishlisted table if bought and they have it wishlisted
+            # Remove from wishlisted table if bought and they have it wishlisted
             connection.execute(
-                    sqlalchemy.text(
-                        """
-                        with purchaser as (
-                            select accounts.id 
-                            from accounts
-                            join carts
-                                on accounts.id = carts.account_id
-                            where carts.id = :cart_id
-                        ),
-                        cart_ids as (
-                            select game_id from cart_items where cart_id = :cart_id
-                        )
-                        delete 
-                        from wishlisted 
-                        where 
-                            wishlisted.game_id in (select game_id from cart_ids) and
-                            wishlisted.account_id = (select id from purchaser)
-
-                        """
+                sqlalchemy.text(
+                    """
+                    WITH purchaser AS (
+                        SELECT accounts.id 
+                        FROM accounts
+                        JOIN carts ON accounts.id = carts.account_id
+                        WHERE carts.id = :cart_id
                     ),
-                    {
-                        "cart_id": cart_id,
-
-                    }
-                )
-            # set the cart checked_out value to be true
-            connection.execute(sqlalchemy.text(
-                """
-                UPDATE carts 
-                SET checked_out = TRUE
-                WHERE carts.id = :cart_id
-                """
+                    cart_ids AS (
+                        SELECT game_id FROM cart_items WHERE cart_id = :cart_id
+                    )
+                    DELETE FROM wishlisted 
+                    WHERE 
+                        wishlisted.game_id IN (SELECT game_id FROM cart_ids) AND
+                        wishlisted.account_id = (SELECT id FROM purchaser)
+                    """
                 ),
-                [{
-                    "cart_id": cart_id
-                }])
-            # getting account id for this cart
+                {"cart_id": cart_id}
+            )
+            
+            # Update cart status to checked out
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE carts 
+                    SET checked_out = TRUE
+                    WHERE id = :cart_id
+                    """
+                ),
+                {"cart_id": cart_id}
+            )
+            
+            # Retrieve account_id for the current cart
             account_id = connection.execute(
                 sqlalchemy.text(
                     """
                     SELECT account_id FROM carts
-                    WHERE carts.id = :cart_id
+                    WHERE id = :cart_id
                     """
                 ),
-                [{
-                    "cart_id": cart_id
-                }]
+                {"cart_id": cart_id}
             ).scalar_one()
-            # getting games bought and costs from that cart
-            games_bought = connection.execute(sqlalchemy.text(
-                """
-                SELECT game_id, cost
-                FROM cart_items
-                WHERE cart_items.cart_id = :cart_id
-                """
-            ),
-            {"cart_id": cart_id}).fetchall()
-            # track transaction in table
-            transaction_id = connection.execute(
-                    sqlalchemy.text(
-                            "INSERT INTO transactions (description) VALUES ('cart checkout for cart :id') RETURNING id"
-                        ),
-                        {"id": cart_id}
-                ).scalar_one()
-            to_purchase = []
-            total_cost = 0
-            # making json object for each game bought in the cart
-            for game_id, cost in games_bought:
-                to_purchase.append(
-                    {"account_id": account_id, "game_id": game_id, "transaction_id": transaction_id, "money_given": cost}
-                )
-                total_cost += cost
-            # inserting into purchased table
-            connection.execute(
-            sqlalchemy.insert(db.purchased),
-                to_purchase,
-            )
-
-            games_in_cart, cost = connection.execute(
+            
+            # Retrieve games_bought and total_cost from the carts table
+            cart_info = connection.execute(
                 sqlalchemy.text(
                     """
                     SELECT total_games, total_cost
                     FROM carts
-                    WHERE carts.id = :cart_id
+                    WHERE id = :cart_id
                     """
                 ),
-                [{
-                    "cart_id": cart_id
-                }]
+                {"cart_id": cart_id}
             ).fetchone()
+
+            games_in_cart, total_cost = cart_info
+            
+            # Create a new transaction for the checkout
+            transaction_id = connection.execute(
+                sqlalchemy.text(
+                    "INSERT INTO transactions (description) VALUES ('cart checkout for cart :id') RETURNING id"
+                ),
+                {"id": cart_id}
+            ).scalar_one()
+            
+            # Insert purchased games into the purchases table
+            games_bought = connection.execute(
+                sqlalchemy.text(
+                    """
+                    INSERT INTO purchases (account_id, game_id, transaction_id, money_given)
+                    SELECT :account_id, game_id, :transaction_id, cost
+                    FROM cart_items
+                    WHERE cart_id = :cart_id
+                    RETURNING game_id
+                    """
+                ),
+                {"account_id": account_id, "transaction_id": transaction_id, "cart_id": cart_id}
+            ).fetchall()
 
     except IntegrityError:
         print("Cart already checked out")
