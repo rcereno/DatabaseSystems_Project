@@ -92,47 +92,42 @@ def cart_view(cart_id: int):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str):
-    """Add a specific game to a cart using cart_id."""
+    """ """
 
-    with db.engine.begin() as connection:     
-        try:   
-            # retrieve game id and price from db
-            gameId_price = connection.execute(
-                sqlalchemy.text(
-                    "SELECT id, price_in_cents FROM games WHERE item_sku = :item_sku"
-                ),
-                {
-                    "item_sku": item_sku
-                }).fetchone() 
-            # game DNE in our inventory, raise http error
-        except NoResultFound:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game not in inventory")
-        # unpack tuple
-        gameId, price = gameId_price
+    with db.engine.begin() as connection:
         try:
-            # inserting row in cart items for the item added
             connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO cart_items (cart_id, game_id, cost) VALUES (:cart_id, :game_id, :cost)"
+                    """
+                    INSERT INTO cart_items (cart_id, game_id, cost)
+                    SELECT :cart_id, id, price_in_cents
+                    FROM games
+                    WHERE item_sku = :item_sku
+                    """
                 ),
-                [{
+                {
                     "cart_id": cart_id,
-                    "game_id": gameId,
-                    "cost": price
-                }]
+                    "item_sku": item_sku
+                }
             )
-            # updating the carts table with total games and price
+
             connection.execute(sqlalchemy.text(
                 """
                 UPDATE carts 
-                SET total_cost = total_cost + :price, total_games = total_games + 1
+                SET total_cost = total_cost + (
+                    SELECT price_in_cents
+                    FROM games
+                    WHERE item_sku = :item_sku
+                ),
+                total_games = total_games + 1
                 WHERE carts.id = :cart_id
                 """
-                ),
-                [{
-                    "price": price,
-                    "cart_id": cart_id
-                }])
+            ),
+            {
+                "item_sku": item_sku,
+                "cart_id": cart_id
+            })
+
         except IntegrityError:
             print("Game already in cart")
             return "OK"
