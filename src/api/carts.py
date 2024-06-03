@@ -1,12 +1,13 @@
 import sqlalchemy
 from src.api import database as db
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import NoResultFound 
 metadata_obj = sqlalchemy.MetaData()
 carts = sqlalchemy.Table("carts", metadata_obj, autoload_with=db.engine)
 accounts = sqlalchemy.Table("accounts", metadata_obj, autoload_with=db.engine)
@@ -29,7 +30,7 @@ def create_cart(customer: Customer):
     """Using account_id, create a cart for that account."""
 
     with db.engine.begin() as connection:
-
+        # create new cart by inserting row into carts table
         cart_id = connection.execute(
             sqlalchemy.text(
                 """
@@ -44,7 +45,7 @@ def create_cart(customer: Customer):
                 "id": customer.account_id
             }]
         ).scalar_one()
-
+    # return user's cart id to then be used in later endpoints
     return {"cart_id": cart_id}
 
 @router.get("/{cart_id}")
@@ -53,9 +54,7 @@ def cart_view(cart_id: int):
     games_in_cart = []
     cost = 0
     with db.engine.begin() as connection:   
-        
-
-
+        # retrieve the items in a specific cart w the cart_id
         game_results = connection.execute(
             sqlalchemy.text(
                 """
@@ -69,6 +68,7 @@ def cart_view(cart_id: int):
                 "cart_id": cart_id
             }]
         ).fetchall()
+        # retrieve the name of the customer and if its been checked out or not
         name_checked_out = connection.execute(
             sqlalchemy.text(
                 """
@@ -83,7 +83,9 @@ def cart_view(cart_id: int):
                 "cart_id": cart_id
             }]
         ).fetchone()
+        # unpacking tuple retreived earlier
         customer_name, checked_out = name_checked_out
+        # getting all the games in the game_results and calculating total price
         for game, price in game_results:
             games_in_cart.append(game)
             cost += price
@@ -95,29 +97,27 @@ def cart_view(cart_id: int):
         "checked_out": checked_out
     }
 
-
-# class CartItem(BaseModel):
-#     quantity: int
-
 @router.post("/{cart_id}/items/{item_sku}")
-# def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 def set_item_quantity(cart_id: int, item_sku: str):
     """Add a specific game to a cart using cart_id."""
 
-    with db.engine.begin() as connection:       
-        gameId_price = connection.execute(
-            sqlalchemy.text(
-                "SELECT id, price_in_cents FROM games WHERE item_sku = :item_sku"
-            ),
-            {
-                "item_sku": item_sku
-            }).fetchone()
-        try: 
-            gameId, price = gameId_price
-        except Exception:
-            return "Game not available in inventory"
-        
+    with db.engine.begin() as connection:     
+        try:   
+            # retrieve game id and price from db
+            gameId_price = connection.execute(
+                sqlalchemy.text(
+                    "SELECT id, price_in_cents FROM games WHERE item_sku = :item_sku"
+                ),
+                {
+                    "item_sku": item_sku
+                }).fetchone() 
+            # game DNE in our inventory, raise http error
+        except NoResultFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game not in inventory")
+        # unpack tuple
+        gameId, price = gameId_price
         try:
+            # inserting row in cart items for the item added
             connection.execute(
                 sqlalchemy.text(
                     "INSERT INTO cart_items (cart_id, game_id, cost) VALUES (:cart_id, :game_id, :cost)"
@@ -128,7 +128,7 @@ def set_item_quantity(cart_id: int, item_sku: str):
                     "cost": price
                 }]
             )
-
+            # updating the carts table with total games and price
             connection.execute(sqlalchemy.text(
                 """
                 UPDATE carts 
@@ -146,12 +146,7 @@ def set_item_quantity(cart_id: int, item_sku: str):
 
     return {"success": True}
 
-
-# class CartCheckout(BaseModel):
-#     payment: str
-
 @router.post("/{cart_id}/checkout")
-# def checkout(cart_id: int, cart_checkout: CartCheckout):
 def checkout(cart_id: int):
     """Checkout cart using cart_id."""
     
@@ -184,27 +179,8 @@ def checkout(cart_id: int):
                         "cart_id": cart_id,
 
                     }
-                    # sqlalchemy.delete(wishlisted)
-                    # .where(wishlisted.c.game_id == cart_items.c.game_id)
-                    # .where(cart_items.c.cart_id == cart_id)
                 )
-            
-            ### UPDATED CART VALUES IN SET ITEM QUANTITY, NOT HERE
-            # cart_items_results = connection.execute(
-            #     sqlalchemy.text(
-            #         """
-            #         SELECT COUNT(game_id), SUM(cost)
-            #         FROM cart_items
-            #         WHERE cart_items.cart_id = :cart_id
-            #         """
-            #     ),
-            #     [{
-            #         "cart_id": cart_id
-            #     }]
-            # ).fetchone()
-            # games_in_cart, cost = cart_items_results
-
-            # Need to finish: updating cart amounts on checkout
+            # set the cart checked_out value to be true
             connection.execute(sqlalchemy.text(
                 """
                 UPDATE carts 
@@ -213,12 +189,9 @@ def checkout(cart_id: int):
                 """
                 ),
                 [{
-                    # "cost": cost,
-                    # "game_count": games_in_cart,
                     "cart_id": cart_id
                 }])
-                    # removed from query
-                    # total_cost = :cost, total_games = :game_count, 
+            # getting account id for this cart
             account_id = connection.execute(
                 sqlalchemy.text(
                     """
@@ -231,6 +204,7 @@ def checkout(cart_id: int):
                     "cart_id": cart_id
                 }]
             ).scalar_one()
+            # getting games bought and costs from that cart
             games_bought = connection.execute(sqlalchemy.text(
                 """
                 SELECT game_id, cost
@@ -239,6 +213,7 @@ def checkout(cart_id: int):
                 """
             ),
             {"cart_id": cart_id}).fetchall()
+            # track transaction in table
             transaction_id = connection.execute(
                     sqlalchemy.text(
                             "INSERT INTO transactions (description) VALUES ('cart checkout for cart :id') RETURNING id"
@@ -247,16 +222,18 @@ def checkout(cart_id: int):
                 ).scalar_one()
             to_purchase = []
             total_cost = 0
+            # making json object for each game bought in the cart
             for game_id, cost in games_bought:
                 to_purchase.append(
                     {"account_id": account_id, "game_id": game_id, "transaction_id": transaction_id, "money_given": cost}
                 )
                 total_cost += cost
+            # inserting into purchased table
             connection.execute(
             sqlalchemy.insert(purchased),
                 to_purchase,
             )
-
+            
             games_in_cart, cost = connection.execute(
                 sqlalchemy.text(
                     """
@@ -273,21 +250,5 @@ def checkout(cart_id: int):
     except IntegrityError:
         print("Cart already checked out")
         return {"games_bought": 0, "total_price": 0}
-
-
-
-    #         # LEDGERIZING
-    #     except IntegrityError as e:
-    #         print("OMG THE CART CHECKOUT DIDN'T GO THROUGH")
-    #         return {"total_potions_bought": 0, "total_gold_paid": 0}
-
-
-        # for cart_items in results:
-
-
-
-        # LEDGERIZING
-
-
 
     return {"games_bought": games_in_cart, "total_price": total_cost}

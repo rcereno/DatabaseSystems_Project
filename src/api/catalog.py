@@ -26,6 +26,7 @@ def get_catalog():
     """
     catalog = []
     with db.engine.begin() as connection:
+        # retrieve all the game column data
         results = connection.execute(
             sqlalchemy.text(
                 """
@@ -42,6 +43,7 @@ def get_catalog():
                 """
             )
         ).fetchall()
+        # add it to our result and return
         for game in results:
             catalog.append(
                 {"sku": game.item_sku, 
@@ -78,19 +80,18 @@ def search_catalog(
     sort_col: search_sort_options = search_sort_options.release_date,
     sort_order: search_sort_order = search_sort_order.desc):
     """Allows user to search our catalog with many search options/order."""
-
+    # selecting all the attributes we want to return back to the user later
     query = (
             sqlalchemy.select(
                 games.c.name,
                 games.c.price_in_cents,
                 games.c.publisher,
                 games.c.platform,
-                # NEED TO SOMEHOW ADD MODE REVIEW IN, NEED TO EDIT
                 games.c.genre,
                 games.c.family_rating,
                 games.c.release_date
             ).select_from(games))
-     
+    # series of checks to see which sort option is chosen
     with db.engine.begin() as connection:
         if game_sku:
             query = query.where(games.c.item_sku.ilike(f"{game_sku}"))
@@ -102,9 +103,9 @@ def search_catalog(
             order_by = games.c.publisher
         elif sort_col == search_sort_options.platform:
             order_by = games.c.platform
-        elif sort_col == search_sort_options.mode_review:
-            # EDIT THIS
-            order_by = games.c.mode_review
+        # elif sort_col == search_sort_options.mode_review:
+        #     EDIT THIS
+        #     order_by = games.c.mode_review
         elif sort_col == search_sort_options.genre:
             order_by = games.c.genre
         elif sort_col == search_sort_options.family_rating:
@@ -114,18 +115,22 @@ def search_catalog(
         else:
             order_by = games.c.release_date  # Default to release date if sort_col doesn't match any case
 
+        # getting sort order
         if sort_order == search_sort_order.asc:
             query = query.order_by(order_by.asc())
         else:
             query = query.order_by(order_by.desc())
         
+        # search page to paginate
         if search_page:
             query = query.offset(int(search_page) * 5)
 
+        # run the query
         results_db = connection.execute(query.limit(5))
         results = []
         prev = ""
         next_page = ""
+        # in the results from query, add each to results variable with the attributes
         for row in results_db:
             print(row)
             results.append(
@@ -140,6 +145,7 @@ def search_catalog(
                     "release_date": row.release_date
                 }
             )
+        # pagination
         if search_page:
             prev = str(int(search_page) - 1) if int(search_page) > 0 else ""
             next_page = str(int(search_page) + 1) if len(results) >= 5 else ""
