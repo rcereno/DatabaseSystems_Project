@@ -92,32 +92,23 @@ def search_catalog(
                 games.c.family_rating,
                 games.c.release_date
             ).select_from(games))
-    # series of checks to see which sort option is chosen
     with db.engine.begin() as connection:
         if game_sku:
             query = query.where(games.c.item_sku.ilike(f"{game_sku}"))
-        if sort_col == search_sort_options.game_name:
-            order_by = games.c.name
-        elif sort_col == search_sort_options.sku:
-            order_by = games.c.item_sku
-        elif sort_col == search_sort_options.price:
-            order_by = games.c.price_in_cents
-        elif sort_col == search_sort_options.publisher:
-            order_by = games.c.publisher
-        elif sort_col == search_sort_options.platform:
-            order_by = games.c.platform
-        # elif sort_col == search_sort_options.mode_review:
-        #     EDIT THIS
-        #     order_by = games.c.mode_review
-        elif sort_col == search_sort_options.genre:
-            order_by = games.c.genre
-        elif sort_col == search_sort_options.family_rating:
-            order_by = games.c.family_rating
-        elif sort_col == search_sort_options.release_date:
-            order_by = games.c.release_date
-        else:
-            order_by = games.c.release_date  # Default to release date if sort_col doesn't match any case
-
+        # map sort options to corresponding column
+        sort_columns = {
+            search_sort_options.game_name: games.c.name,
+            search_sort_options.sku: games.c.item_sku,
+            search_sort_options.price: games.c.price_in_cents,
+            search_sort_options.publisher: games.c.publisher,
+            search_sort_options.platform: games.c.platform,
+            # search_sort_options.mode_review: games.c.mode_review,  # EDIT THIS
+            search_sort_options.genre: games.c.genre,
+            search_sort_options.family_rating: games.c.family_rating,
+            search_sort_options.release_date: games.c.release_date,
+        }
+        # get column for sorting based on dictionary
+        order_by = sort_columns.get(sort_col, games.c.release_date)
         # getting sort order
         if sort_order == search_sort_order.asc:
             query = query.order_by(order_by.asc())
