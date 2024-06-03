@@ -92,9 +92,9 @@ Handles the checkout process for a specific cart.
 }
 ```
 
-### 5. View Cart - `/carts/{account_id}/{cart_id}` (POST)
+### 5. View Cart - `/carts/{cart_id}` (GET)
 
-View current cart of the customer
+View current cart of the customer.
 
 **Response**:
 
@@ -102,10 +102,10 @@ View current cart of the customer
 {
   "cart_id": "integer",
   "customer_name": "string",
-  "games_in_cart": "integer",
-  "total_cost": "integer"
+  "games_in_cart": ["string"],
+  "total_cost": "integer",
+  "checked_out": "boolean"
 }
-```
 
 ### 6. Search Games in Catalog - `/catalog/search/` (GET)
 
