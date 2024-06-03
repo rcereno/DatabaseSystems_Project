@@ -50,12 +50,21 @@
 - Now registration returns account_id to user
 
 4. cart_view API inconsistent w/ implementation (cart view now)
+
+- Updated to be consistent with implementation.
+
 5. Add to wishlist: inconsistent w/ implementation
+
+- Updated to be consistent with implementation.
+
 6. Remove current time
 
 - Removed
 
 7. Review game: implementation and spec inconsistent
+
+- Updated to be consistent with implementation.
+
 8. Not storing total_games and total_cost for each cart, instead do a cart view that has the information for each cart
 9. Price to dollars instead of cents
 10. Make columns like sku, name, and price in the games table not nullable

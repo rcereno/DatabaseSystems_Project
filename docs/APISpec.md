@@ -92,7 +92,7 @@ Handles the checkout process for a specific cart.
 }
 ```
 
-### 5. View Cart - `/carts/{cart_id}` (GET)
+### 5. Cart View - `/carts/{cart_id}` (GET)
 
 View current cart of the customer.
 
@@ -158,7 +158,7 @@ A call customers can make to register their account.
 }
 ```
 
-### 7.2 Account View- `/{account_id}/view` (GET)
+### 7.2 Account View- `/account/{account_id}/view` (GET)
 
 **Reponse**
 
@@ -171,7 +171,7 @@ A call customers can make to register their account.
 }
 ```
 
-### 8. Add to wishlist- `/{account_id}/wishlist/{game_sku}` (PUT)
+### 8. Add to wishlist- `/account/{account_id}/wishlist/{game_sku}` (PUT)
 
 An API call that allows a customer to add a specific game to their account wishlist.
 
@@ -179,12 +179,11 @@ An API call that allows a customer to add a specific game to their account wishl
 
 ```json
 {
-  "success": "boolean",
-  "msg": "string"
+  "success": "boolean"
 }
 ```
 
-### 9. Review game- `/{account_id}/reviews/{game_sku}` (PUT)
+### 9. Review game- `/account/{account_id}/reviews/{game_sku}` (PUT)
 
 An API call that allows a customer to review a game.
 
