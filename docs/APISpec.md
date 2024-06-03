@@ -202,6 +202,23 @@ An API call that allows a customer to review a game.
 
 A call to reset shop will delete all inventory and existing carts of the e-commerce game shop. The e-commerce game shop should take this as an opportunity to remove all of their inventory. 
 
+**Request:**
+
+```json
+{
+  "id": "integer", /*cart id*/
+  "account_id": "integer" /*customer_id*/
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": "boolean"
+}
+```
+
 ### 9. Review game - '/games/{game_id}/reviews' (PUT)
 
 Add review of up to five stars into a game's review data.
