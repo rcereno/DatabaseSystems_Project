@@ -192,7 +192,6 @@ def checkout(cart_id: int):
                     """
                     SELECT account_id FROM carts
                     WHERE carts.id = :cart_id
-                    ORDER BY created_at DESC
                     """
                 ),
                 [{
