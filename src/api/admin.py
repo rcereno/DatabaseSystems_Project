@@ -13,6 +13,7 @@ router = APIRouter(
 
 @router.post("/reset")
 def reset():
+    """Resets entire shop"""
     with db.engine.begin() as connection:
         # Reset games table
         connection.execute(sqlalchemy.text("UPDATE games SET mode_review = NULL"))

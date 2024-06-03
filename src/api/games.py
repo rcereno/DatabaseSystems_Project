@@ -6,8 +6,7 @@ from pydantic import BaseModel
 from src.api import auth
 
 from sqlalchemy.exc import IntegrityError
-metadata_obj = sqlalchemy.MetaData()
-game_table = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
+# game_table = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
 
 router = APIRouter(
     prefix="/games",
@@ -15,6 +14,7 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+# class with all the attributes we want to store in db
 class Game(BaseModel):
     sku: str
     name: str
@@ -27,8 +27,10 @@ class Game(BaseModel):
 
 @router.post("/add")
 def add_to_game_inventory(games: list[Game]):
+    """For shop keeper's use, add games to inventory."""
     games_to_add = []
     for game in games:
+        # for each game given, add to our result
         games_to_add.append(
             {
                 "item_sku": game.sku,
@@ -43,10 +45,12 @@ def add_to_game_inventory(games: list[Game]):
         )
     with db.engine.begin() as connection:
         try: 
+            # attempt to insert into games table
             connection.execute(
-            sqlalchemy.insert(game_table),
+            sqlalchemy.insert(db.games),
                 games_to_add,
             )
+            # integrityError meaning game w/ sku alr exists
         except IntegrityError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Game with sku already exists"

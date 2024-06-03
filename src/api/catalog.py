@@ -10,13 +10,13 @@ from enum import Enum
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import APIRouter
-metadata_obj = sqlalchemy.MetaData()
-games = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
+# metadata_obj = sqlalchemy.MetaData()
+# games = sqlalchemy.Table("games", metadata_obj, autoload_with=db.engine)
 router = APIRouter()
 
-metadata_obj = sqlalchemy.MetaData()
-metadata_obj.reflect(bind=db.engine, views=True)
-game_catalog = sqlalchemy.Table("game_catalog", metadata_obj, autoload_with=db.engine)
+# metadata_obj = sqlalchemy.MetaData()
+db.metadata_obj.reflect(bind=db.engine, views=True)
+game_catalog = sqlalchemy.Table("game_catalog", db.metadata_obj, autoload_with=db.engine)
 
 
 @router.get("/catalog/", tags=["catalog"])
@@ -26,6 +26,7 @@ def get_catalog():
     """
     catalog = []
     with db.engine.begin() as connection:
+        # retrieve all the game column data
         results = connection.execute(
             sqlalchemy.text(
                 """
@@ -42,6 +43,7 @@ def get_catalog():
                 """
             )
         ).fetchall()
+        # add it to our result and return
         for game in results:
             catalog.append(
                 {"sku": game.item_sku, 
@@ -64,7 +66,7 @@ class search_sort_options(str, Enum):
     platform = "platform"
     avg_review = "review"
     release_date = "release_date"
-    rating = "family_rating"
+    family_rating = "family_rating"
 
 class search_sort_order(str, Enum):
     asc = "asc"
@@ -77,59 +79,58 @@ def search_catalog(
     search_page: str = "",
     sort_col: search_sort_options = search_sort_options.release_date,
     sort_order: search_sort_order = search_sort_order.desc):
-
+    """Allows user to search our catalog with many search options/order."""
+    # selecting all the attributes we want to return back to the user later
     query = (
             sqlalchemy.select(
-                games.c.name,
-                games.c.price_in_cents,
-                games.c.publisher,
-                games.c.platform,
-                # NEED TO SOMEHOW ADD MODE REVIEW IN, NEED TO EDIT
-                games.c.genre,
-                games.c.family_rating,
-                games.c.release_date
-            ).select_from(games))
-     
+                db.games.c.item_sku,
+                db.games.c.name,
+                db.games.c.price_in_cents,
+                db.games.c.publisher,
+                db.games.c.platform,
+                db.games.c.genre,
+                db.games.c.family_rating,
+                db.games.c.release_date
+            ).select_from(db.games))
     with db.engine.begin() as connection:
         if game_sku:
-            query = query.where(games.c.item_sku.ilike(f"{game_sku}"))
-        if sort_col == search_sort_options.game_name:
-            order_by = games.c.name
-        elif sort_col == search_sort_options.price:
-            order_by = games.c.price_in_cents
-        elif sort_col == search_sort_options.publisher:
-            order_by = games.c.publisher
-        elif sort_col == search_sort_options.platform:
-            order_by = games.c.platform
-        elif sort_col == search_sort_options.mode_review:
-            # EDIT THIS
-            order_by = games.c.mode_review
-        elif sort_col == search_sort_options.genre:
-            order_by = games.c.genre
-        elif sort_col == search_sort_options.family_rating:
-            order_by = games.c.family_rating
-        elif sort_col == search_sort_options.release_date:
-            order_by = games.c.release_date
-        else:
-            order_by = games.c.release_date  # Default to release date if sort_col doesn't match any case
-
+            query = query.where(db.games.c.item_sku.ilike(f"{game_sku}"))
+        # map sort options to corresponding column
+        sort_columns = {
+            search_sort_options.game_name: db.games.c.name,
+            search_sort_options.sku: db.games.c.item_sku,
+            search_sort_options.price: db.games.c.price_in_cents,
+            search_sort_options.publisher: db.games.c.publisher,
+            search_sort_options.platform: db.games.c.platform,
+            # search_sort_options.mode_review: games.c.mode_review,  # EDIT THIS
+            search_sort_options.genre: db.games.c.genre,
+            search_sort_options.family_rating: db.games.c.family_rating,
+            search_sort_options.release_date: db.games.c.release_date,
+        }
+        # get column for sorting based on dictionary
+        order_by = sort_columns.get(sort_col, db.games.c.release_date)
+        # getting sort order
         if sort_order == search_sort_order.asc:
             query = query.order_by(order_by.asc())
         else:
             query = query.order_by(order_by.desc())
         
+        # search page to paginate
         if search_page:
             query = query.offset(int(search_page) * 5)
 
+        # run the query
         results_db = connection.execute(query.limit(5))
         results = []
         prev = ""
         next_page = ""
+        # in the results from query, add each to results variable with the attributes
         for row in results_db:
             print(row)
             results.append(
                 {
-                    "game_sku": row.name,
+                    "game_sku": row.item_sku,
+                    "name:": row.name,
                     "price": row.price_in_cents,
                     "publisher": row.publisher,
                     "platform": row.platform,
@@ -139,6 +140,7 @@ def search_catalog(
                     "release_date": row.release_date
                 }
             )
+        # pagination
         if search_page:
             prev = str(int(search_page) - 1) if int(search_page) > 0 else ""
             next_page = str(int(search_page) + 1) if len(results) >= 5 else ""
@@ -155,6 +157,7 @@ def search_catalog(
 
 @router.get("/catalog/trending/", tags=["catalog"])
 def trending_catalog(time_unit: str = "day"):
+    """Retrieves the recently trending games based on recent reviews."""
     number_of_days = 0
 
     match time_unit:
