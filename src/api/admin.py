@@ -11,8 +11,14 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+class Customer(BaseModel):
+    account_id: int
+
 @router.post("/reset")
-def reset():
+def reset(
+    cart_id: int,
+    account_id = int
+):
     """Resets entire shop"""
     with db.engine.begin() as connection:
         # Reset games table
