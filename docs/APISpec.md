@@ -24,7 +24,7 @@ Retrieves the catalog of items. Each unique item combination should have only a 
 ```json
 [
   {
-    "sku": "string" /* Matching regex ^[a-zA-Z0-9_]{1,20}$ */,
+    "sku": "string" /* Matching regex ^[a-zA-Z0-9_]{1,50}$ */,
     "name": "string",
     "publisher": "string",
     "price": "integer" /* Between 1 and 500 */,
@@ -98,7 +98,7 @@ View current cart of the customer.
 
 **Response**:
 
-```json
+````json
 {
   "cart_id": "integer",
   "customer_name": "string",
@@ -147,7 +147,7 @@ A call customers can make to register their account.
   "customer_name": "string",
   "email": "string"
 }
-```
+````
 
 **Response**
 
