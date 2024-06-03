@@ -49,45 +49,43 @@ def create_cart(customer: Customer):
 
 @router.get("/{cart_id}")
 def cart_view(cart_id: int):
-    games_in_cart = []
-    cost = 0
-    with db.engine.begin() as connection:   
-        
-
-
-        game_results = connection.execute(
+# Combine queries using joins to retrieve cart details, customer name, and game information
+    with db.engine.begin() as connection:
+        result = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT games.name, games.price_in_cents 
-                FROM games 
-                JOIN cart_items ON games.id = cart_items.game_id
-                WHERE cart_items.cart_id = :cart_id
-                """
-            ),
-            [{
-                "cart_id": cart_id
-            }]
-        ).fetchall()
-        name_checked_out = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT name, checked_out
-                FROM accounts 
-                JOIN carts ON carts.account_id = accounts.id
+                SELECT 
+                    accounts.name AS customer_name,
+                    carts.checked_out,
+                    games.name AS game_name,
+                    games.price_in_cents
+                FROM carts
+                JOIN accounts ON carts.account_id = accounts.id
+                LEFT JOIN cart_items ON carts.id = cart_items.cart_id
+                LEFT JOIN games ON cart_items.game_id = games.id
                 WHERE carts.id = :cart_id
-                -- ORDER BY carts.created_at DESC
                 """
             ),
-            [{
-                "cart_id": cart_id
-            }]
-        ).fetchone()
-        customer_name, checked_out = name_checked_out
-        for game, price in game_results:
-            games_in_cart.append(game)
-            cost += price
+            {"cart_id": cart_id}
+        ).fetchall()
+
+        if not result:
+            return {"error": "Cart not found"}
+
+        games_in_cart = []
+        cost = 0
+        customer_name = result[0].customer_name
+        checked_out = result[0].checked_out
+#Go through each row in the query result
+# If the game name exists (not None), add it to the list of games in the cart
+# Also, add the price of the game to the total cost
+        for row in result:
+            if row.game_name is not None:
+                games_in_cart.append(row.game_name)
+                cost += row.price_in_cents
+
     return {
-        "cart_id": cart_id, 
+        "cart_id": cart_id,
         "customer_name": customer_name,
         "games_in_cart": games_in_cart,
         "total_cost": cost,
