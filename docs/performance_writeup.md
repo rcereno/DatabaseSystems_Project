@@ -3,6 +3,7 @@
 **Performance Results of Hitting Points**
 
 The Three Slowest Endpoints:
+
 -
 -
 -
