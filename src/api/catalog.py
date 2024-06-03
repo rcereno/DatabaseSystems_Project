@@ -25,36 +25,37 @@ def get_catalog():
     Retrieves the available catalog of games for people to purchase. 
     """
     catalog = []
-    with db.engine.begin() as connection:
-        # retrieve all the game column data
-        results = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT 
-                    item_sku, 
-                    name, 
-                    publisher, 
-                    price_in_cents, 
-                    genre, platform, 
-                    family_rating, 
-                    review,
-                    release_date
-                FROM game_catalog
-                """
-            )
-        ).fetchall()
-        # add it to our result and return
-        for game in results:
-            catalog.append(
-                {"sku": game.item_sku, 
-                 "name": game.name, 
-                 "publisher": game.publisher, 
-                 "price": game.price_in_cents, 
-                 "genre": game.genre, 
-                 "platform": game.platform, 
-                 "avg_review": (game.review if game.review is not None else "NOT YET REVIEWED"),
-                 "rating": game.family_rating,
-                 "release_date": game.release_date})
+    try:
+        with db.engine.begin() as connection:
+            results = connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT 
+                        item_sku, 
+                        name, 
+                        publisher, 
+                        price_in_cents, 
+                        genre, platform, 
+                        family_rating, 
+                        review,
+                        release_date
+                    FROM game_catalog
+                    """
+                )
+            ).fetchall()
+            for game in results:
+                catalog.append(
+                    {"sku": game.item_sku, 
+                     "name": game.name, 
+                     "publisher": game.publisher, 
+                     "price": game.price_in_cents, 
+                     "genre": game.genre, 
+                     "platform": game.platform, 
+                     "avg_review": (game.review if game.review is not None else "NOT YET REVIEWED"),
+                     "rating": game.family_rating,
+                     "release_date": game.release_date})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return catalog
 
 class search_sort_options(str, Enum):
