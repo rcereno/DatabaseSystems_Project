@@ -1,7 +1,7 @@
 ## Code peer suggestions
 
 1. Add docstrings to endpoint functions where they don't exist: completed
-2. Add more commenting
+2. Add more commenting: added more guiding comments throughout code to explain what it does more clearly
 3. Refactor catalog search, remove if/elif statements
 4. Search catalog parameters could be moved to a class to make the function’s argos easier to read/edit
 5. Remove commented out code

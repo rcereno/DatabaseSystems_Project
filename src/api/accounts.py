@@ -362,30 +362,34 @@ def recommend_game(account_id: int):
                 genres = entry[0].split(", ")
                 for genre in genres:
                     if genre not in preferences["genre"]:
+                        # first encounter, init count to 0
                         preferences["genre"][genre] = 0
+                    # add the weight to the counter for that genre
                     preferences["genre"][genre] += weight
                 
                 publisher = entry[1]
                 if publisher not in preferences["publisher"]:
                     preferences["publisher"][publisher] = 0
+                    # first encounter, init count to 0
                 preferences["publisher"][publisher] += weight
-
+                # add the weight to the counter for that publisher
                 platform = entry[2]
                 if platform not in preferences["platform"]:
                     preferences["platform"][platform] = 0
+                    # first encounter, init count to 0
                 preferences["platform"][platform] += weight
-
+                # add the weight to the counter for that platform
                 family_rating = entry[3]
                 if family_rating not in preferences["family_rating"]:
                     preferences["family_rating"][family_rating] = 0
+                    # first encounter, init count to 0
                 preferences["family_rating"][family_rating] += weight
+                # add the weight to the counter for that family rating
         
         # highly reviewed games carry most weight, then purchased, then wishlisted
         update_preferences(reviews, weight=3)
         update_preferences(purchases, weight=2)
         update_preferences(wishlists, weight=1)
-
-        print("prefs: ", preferences)
         if num_entries == 0:
             # Recommend 5 random games if no data is available
             random_games_stmt = """
@@ -411,7 +415,7 @@ def recommend_game(account_id: int):
             WHERE id NOT IN :exclude_game_ids
         """
         all_games = connection.execute(sqlalchemy.text(all_games_stmt), {"exclude_game_ids": tuple(exclude_game_ids)}).fetchall()
-         # Calculate preference scores
+         # Calculate preference scores by adding them all together
         def calculate_preference_score(game):
             genre_score = sum(preferences["genre"].get(genre, 0) for genre in game.genre.split(", "))
             publisher_score = preferences["publisher"].get(game.publisher, 0)
@@ -419,7 +423,7 @@ def recommend_game(account_id: int):
             family_rating_score = preferences["family_rating"].get(game.family_rating, 0)
             return genre_score + publisher_score + platform_score + family_rating_score
 
-        # sort the games by preference score in descending order
+        # calculate pref score and then sort the games by score in descending order
         scored_games = [(game, calculate_preference_score(game)) for game in all_games]
         scored_games.sort(key=lambda x: x[1], reverse=True)
         
