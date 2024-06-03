@@ -97,46 +97,43 @@ def cart_view(cart_id: int):
 #     quantity: int
 
 @router.post("/{cart_id}/items/{item_sku}")
-# def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 def set_item_quantity(cart_id: int, item_sku: str):
     """ """
 
-    with db.engine.begin() as connection:       
-        gameId_price = connection.execute(
-            sqlalchemy.text(
-                "SELECT id, price_in_cents FROM games WHERE item_sku = :item_sku"
-            ),
-            {
-                "item_sku": item_sku
-            }).fetchone()
-        try: 
-            gameId, price = gameId_price
-        except Exception:
-            return "Game not available in inventory"
-        
+    with db.engine.begin() as connection:
         try:
             connection.execute(
                 sqlalchemy.text(
-                    "INSERT INTO cart_items (cart_id, game_id, cost) VALUES (:cart_id, :game_id, :cost)"
+                    """
+                    INSERT INTO cart_items (cart_id, game_id, cost)
+                    SELECT :cart_id, id, price_in_cents
+                    FROM games
+                    WHERE item_sku = :item_sku
+                    """
                 ),
-                [{
+                {
                     "cart_id": cart_id,
-                    "game_id": gameId,
-                    "cost": price
-                }]
+                    "item_sku": item_sku
+                }
             )
 
             connection.execute(sqlalchemy.text(
                 """
                 UPDATE carts 
-                SET total_cost = total_cost + :price, total_games = total_games + 1
+                SET total_cost = total_cost + (
+                    SELECT price_in_cents
+                    FROM games
+                    WHERE item_sku = :item_sku
+                ),
+                total_games = total_games + 1
                 WHERE carts.id = :cart_id
                 """
-                ),
-                [{
-                    "price": price,
-                    "cart_id": cart_id
-                }])
+            ),
+            {
+                "item_sku": item_sku,
+                "cart_id": cart_id
+            })
+
         except IntegrityError:
             print("Game already in cart")
             return "OK"
