@@ -133,3 +133,20 @@ select
 from
   games
   left join avg_review_view avg_review on games.id = avg_review.game_id;
+
+create view
+  public.cart_values_view as
+select
+  cart_items.cart_id,
+  count(*) as total_games,
+  coalesce(sum(games.price_in_cents), 0::bigint) as total_cost,
+  carts.checked_out
+from
+  carts
+  join cart_items on carts.id = cart_items.cart_id
+  join games on cart_items.game_id = games.id
+group by
+  cart_items.cart_id,
+  carts.checked_out
+order by
+  cart_items.cart_id;
