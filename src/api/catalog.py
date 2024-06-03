@@ -66,7 +66,7 @@ class search_sort_options(str, Enum):
     platform = "platform"
     avg_review = "review"
     release_date = "release_date"
-    rating = "family_rating"
+    family_rating = "family_rating"
 
 class search_sort_order(str, Enum):
     asc = "asc"
@@ -83,6 +83,7 @@ def search_catalog(
     # selecting all the attributes we want to return back to the user later
     query = (
             sqlalchemy.select(
+                games.c.item_sku,
                 games.c.name,
                 games.c.price_in_cents,
                 games.c.publisher,
@@ -97,6 +98,8 @@ def search_catalog(
             query = query.where(games.c.item_sku.ilike(f"{game_sku}"))
         if sort_col == search_sort_options.game_name:
             order_by = games.c.name
+        elif sort_col == search_sort_options.sku:
+            order_by = games.c.item_sku
         elif sort_col == search_sort_options.price:
             order_by = games.c.price_in_cents
         elif sort_col == search_sort_options.publisher:
@@ -135,7 +138,8 @@ def search_catalog(
             print(row)
             results.append(
                 {
-                    "game_sku": row.name,
+                    "game_sku": row.item_sku,
+                    "name:": row.name,
                     "price": row.price_in_cents,
                     "publisher": row.publisher,
                     "platform": row.platform,
