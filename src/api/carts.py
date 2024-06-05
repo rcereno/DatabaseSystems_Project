@@ -43,14 +43,18 @@ def create_cart(customer: Customer):
     # return user's cart id to then be used in later endpoints
     return {"cart_id": cart_id}
 
-@router.get("/{cart_id}")
-def cart_view(cart_id: int):
+class Cart(BaseModel):
+    id: int
+
+@router.get("/{account_id}")
+def cart_view(account_id: int, cart: Cart):
     with db.engine.begin() as connection:
         # Combine queries using joins to retrieve cart details, customer name, and game information
         result = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT 
+                SELECT
+                    accounts.id AS account_id,
                     accounts.name AS customer_name,
                     carts.checked_out,
                     games.name AS game_name,
@@ -62,11 +66,14 @@ def cart_view(cart_id: int):
                 WHERE carts.id = :cart_id
                 """
             ),
-            {"cart_id": cart_id}
+            {"cart_id": cart.id}
         ).fetchall()
 
         if not result:
-            return {"error": "Cart not found"}
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart not found")
+            # return {"error": "Cart not found"}
+        if result[0].account_id != account_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart view permission denied for user")
 
         games_in_cart = []
         cost = 0
@@ -83,7 +90,7 @@ def cart_view(cart_id: int):
 
 
     return {
-        "cart_id": cart_id,
+        "cart_id": cart.id,
         "customer_name": customer_name,
         "games_in_cart": games_in_cart,
         "total_cost": cost,

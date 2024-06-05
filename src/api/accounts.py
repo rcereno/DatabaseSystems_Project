@@ -225,7 +225,7 @@ class WishlistItem(BaseModel):
     sku: str
 
 @router.post("/{account_id}/wishlist/{game_sku}")
-def add_to_wishlist(account_id: int, game_sku: str):
+def add_to_wishlist(account_id: int, game: WishlistItem):
      """Allows account to wishlist game."""
      with db.engine.begin() as connection:
         # Integrity Error check
@@ -236,7 +236,7 @@ def add_to_wishlist(account_id: int, game_sku: str):
                     "SELECT id FROM games WHERE item_sku = :game_sku"
                 ),
                 [{
-                    "game_sku": game_sku
+                    "game_sku": game.sku
                 }]
             ).scalar_one()
         except NoResultFound:
@@ -284,6 +284,52 @@ def add_to_wishlist(account_id: int, game_sku: str):
         else:
             raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Game has already been purchased by user")
+
+@router.post("/{account_id}/wishlist/remove/{game_sku}")
+def remove_from_wishlist(account_id: int, game_sku: str):
+    """Allows account to remove game from wishlist."""
+    with db.engine.begin() as connection:
+        # Integrity Error check
+        try:
+            # retreieve game ID for the game_sku passed
+            game_id = connection.execute(
+                sqlalchemy.text(
+                    "SELECT id FROM games WHERE item_sku = :game_sku"
+                ),
+                [{
+                    "game_sku": game_sku
+                }]
+            ).scalar_one()
+        except NoResultFound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Game does not exist in our inventory."
+            )
+        # flag for if the game has been purchased by the account
+        removed_games = connection.execute(
+            sqlalchemy.text(
+                """
+                DELETE 
+                FROM wishlisted 
+                WHERE 
+                    account_id = :account_id AND game_id = :game_id
+                RETURNING *
+                """
+            ),
+            [{
+                "account_id": account_id,
+                "game_id": game_id
+            }]
+        ).fetchall()
+
+        # if successful, return successful
+        if removed_games:
+            return {
+                "success": True
+            }
+        # game not found in wishlist, cannot remove 
+        else:
+            raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Game not in wishlist")
         
 
     
