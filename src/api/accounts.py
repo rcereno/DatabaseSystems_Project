@@ -351,7 +351,7 @@ def format_game_recommendations(games):
                 "item_sku": game.item_sku,
                 "name": game.name,
                 "publisher": game.publisher,
-                "price_in_cents": game.price_in_cents,
+                "price_in_dollars": game.price_in_dollars,
                 "genre": game.genre,
                 "platform": game.platform,
                 "family_rating": game.family_rating,
@@ -449,7 +449,7 @@ def recommend_game(account_id: int):
         if num_entries == 0:
             # Recommend 5 random games if no data is available
             random_games_stmt = """
-                SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date
+                SELECT item_sku, name, publisher, price_in_dollars, genre, platform, family_rating, release_date
                 FROM games
                 WHERE id NOT IN :exclude_game_ids
                 ORDER BY RANDOM()
@@ -466,7 +466,7 @@ def recommend_game(account_id: int):
 
          # Fetch all games
         all_games_stmt = """
-            SELECT item_sku, name, publisher, price_in_cents, genre, platform, family_rating, release_date, id
+            SELECT item_sku, name, publisher, price_in_dollars, genre, platform, family_rating, release_date, id
             FROM games
             WHERE id NOT IN :exclude_game_ids
         """

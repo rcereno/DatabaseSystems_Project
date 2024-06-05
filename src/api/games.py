@@ -36,7 +36,7 @@ def add_to_game_inventory(games: list[Game]):
                 "item_sku": game.sku,
                 "name": game.name,
                 "publisher": game.publisher,
-                "price_in_cents": game.price,
+                "price_in_dollars": game.price,
                 "platform": game.platform,
                 "genre": game.genre,
                 "family_rating": game.family_rating,

@@ -34,7 +34,7 @@ def get_catalog():
                         item_sku, 
                         name, 
                         publisher, 
-                        price_in_cents, 
+                        price_in_dollars, 
                         genre, platform, 
                         family_rating, 
                         review,
@@ -48,7 +48,7 @@ def get_catalog():
                     {"sku": game.item_sku, 
                      "name": game.name, 
                      "publisher": game.publisher, 
-                     "price": game.price_in_cents, 
+                     "price": game.price_in_dollars, 
                      "genre": game.genre, 
                      "platform": game.platform, 
                      "avg_review": (game.review if game.review is not None else "NOT YET REVIEWED"),
@@ -86,7 +86,7 @@ def search_catalog(
             sqlalchemy.select(
                 db.games.c.item_sku,
                 db.games.c.name,
-                db.games.c.price_in_cents,
+                db.games.c.price_in_dollars,
                 db.games.c.publisher,
                 db.games.c.platform,
                 db.games.c.genre,
@@ -100,7 +100,7 @@ def search_catalog(
         sort_columns = {
             search_sort_options.game_name: db.games.c.name,
             search_sort_options.sku: db.games.c.item_sku,
-            search_sort_options.price: db.games.c.price_in_cents,
+            search_sort_options.price: db.games.c.price_in_dollars,
             search_sort_options.publisher: db.games.c.publisher,
             search_sort_options.platform: db.games.c.platform,
             # search_sort_options.mode_review: games.c.mode_review,  # EDIT THIS
@@ -132,7 +132,7 @@ def search_catalog(
                 {
                     "game_sku": row.item_sku,
                     "name:": row.name,
-                    "price": row.price_in_cents,
+                    "price": row.price_in_dollars,
                     "publisher": row.publisher,
                     "platform": row.platform,
                     "mode_review": 0,  # EDIT THIS
@@ -191,7 +191,7 @@ def trending_catalog(time_unit: str = "day"):
                     item_sku, 
                     name, 
                     publisher, 
-                    price_in_cents, 
+                    price_in_dollars, 
                     genre, 
                     platform, 
                     family_rating,
@@ -212,7 +212,7 @@ def trending_catalog(time_unit: str = "day"):
                 {"sku": game.item_sku, 
                  "name": game.name, 
                  "publisher": game.publisher, 
-                 "price": game.price_in_cents, 
+                 "price": game.price_in_dollars, 
                  "genre": game.genre, 
                  "platform": game.platform, 
                  "avg_review": (game.review if game.review != -1 else "NOT YET REVIEWED"),
