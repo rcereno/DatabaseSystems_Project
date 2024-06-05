@@ -100,7 +100,7 @@ def cart_view(account_id: int, cart: Cart):
 class CartItem(BaseModel):
     sku: str
 
-@router.post("/{cart_id}/items/{item_sku}")
+@router.post("/{cart_id}/items")
 def set_item_quantity(cart_id: int, item: CartItem):
     """ """
 

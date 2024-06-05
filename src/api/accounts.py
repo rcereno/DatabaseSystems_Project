@@ -224,7 +224,7 @@ def add_review(account_id: int, game_sku: str, review: Review):
 class WishlistItem(BaseModel):
     sku: str
 
-@router.post("/{account_id}/wishlist/{game_sku}")
+@router.post("/{account_id}/wishlist")
 def add_to_wishlist(account_id: int, game: WishlistItem):
      """Allows account to wishlist game."""
      with db.engine.begin() as connection:
@@ -285,8 +285,8 @@ def add_to_wishlist(account_id: int, game: WishlistItem):
             raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Game has already been purchased by user")
 
-@router.post("/{account_id}/wishlist/remove/{game_sku}")
-def remove_from_wishlist(account_id: int, game_sku: str):
+@router.post("/{account_id}/wishlist/remove")
+def remove_from_wishlist(account_id: int, game: WishlistItem):
     """Allows account to remove game from wishlist."""
     with db.engine.begin() as connection:
         # Integrity Error check
@@ -297,7 +297,7 @@ def remove_from_wishlist(account_id: int, game_sku: str):
                     "SELECT id FROM games WHERE item_sku = :game_sku"
                 ),
                 [{
-                    "game_sku": game_sku
+                    "game_sku": game.sku
                 }]
             ).scalar_one()
         except NoResultFound:
