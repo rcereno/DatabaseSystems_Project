@@ -43,11 +43,13 @@ def create_cart(customer: Customer):
     # return user's cart id to then be used in later endpoints
     return {"cart_id": cart_id}
 
-class Cart(BaseModel):
-    id: int
+# class Cart(BaseModel):
+#     id: int
 
-@router.get("/{account_id}")
-def cart_view(account_id: int, cart: Cart):
+# @router.get("/{account_id}")
+# def cart_view(account_id: int, cart: Cart):
+@router.get("/{account_id}/{cart_id}}")
+def cart_view(account_id: int, cart_id: int):
     with db.engine.begin() as connection:
         # Combine queries using joins to retrieve cart details, customer name, and game information
         result = connection.execute(
@@ -58,7 +60,7 @@ def cart_view(account_id: int, cart: Cart):
                     accounts.name AS customer_name,
                     carts.checked_out,
                     games.name AS game_name,
-                    games.price_in_cents
+                    games.price_in_dollars
                 FROM carts
                 JOIN accounts ON carts.account_id = accounts.id
                 LEFT JOIN cart_items ON carts.id = cart_items.cart_id
@@ -66,7 +68,7 @@ def cart_view(account_id: int, cart: Cart):
                 WHERE carts.id = :cart_id
                 """
             ),
-            {"cart_id": cart.id}
+            {"cart_id": cart_id}
         ).fetchall()
 
         if not result:
@@ -86,11 +88,13 @@ def cart_view(account_id: int, cart: Cart):
         for row in result:
             if row.game_name is not None:
                 games_in_cart.append(row.game_name)
-                cost += row.price_in_cents
+                # cost += row.price_in_dollars
+        cost = connection.execute(sqlalchemy.text("""SELECT total_cost FROM cart_values_view WHERE cart_id = :cart_id"""),
+                           {"cart_id": cart_id}).scalar_one()
 
 
     return {
-        "cart_id": cart.id,
+        "cart_id": cart_id,
         "customer_name": customer_name,
         "games_in_cart": games_in_cart,
         "total_cost": cost,

@@ -127,6 +127,15 @@ def account_view(account_id: int):
             "wishlist": wishlisted,
             "current_cart": f"Games in cart: {games_in_cart}, Cost: {cost}"
         } 
+        ## MAKE LESS REDUNDANT PLEASE 
+        if not current_cart_id:
+            return {
+            "customer_name": name,
+            "games_owned": games,
+            "wishlist": wishlisted,
+            "current_cart": f"Games in cart: {games_in_cart}, Cost: {cost}"
+            }
+
         # Cart that's not checked out found, so get the count of games in cart and total cost
         cart_items_results = connection.execute(
             sqlalchemy.text(
