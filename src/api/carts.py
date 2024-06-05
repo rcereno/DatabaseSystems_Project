@@ -205,7 +205,7 @@ def checkout(cart_id: int):
                     """
                     SELECT total_games, total_cost
                     FROM cart_values_view
-                    WHERE id = :cart_id
+                    WHERE cart_id = :cart_id
                     """
                 ),
                 {"cart_id": cart_id}

@@ -377,17 +377,21 @@ def recommend_game(account_id: int):
         ).fetchall()
         reviewed_games_id = {entry.id for entry in reviews}
         # get purchased games
-        purchases = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
-                FROM purchases p
-                JOIN games g ON p.game_id = g.id
-                WHERE p.account_id = :account_id AND g.id NOT IN :reviewed_game_ids
-                """
-            ),
-            {"account_id": account_id, "reviewed_game_ids": tuple(reviewed_games_id)}
-        ).fetchall()
+        purchases = []
+        
+        if reviewed_games_id:
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT g.genre, g.publisher, g.platform, g.family_rating, g.id
+                    FROM purchases p
+                    JOIN games g ON p.game_id = g.id
+                    WHERE p.account_id = :account_id AND g.id NOT IN :reviewed_game_ids
+                    """
+                ),
+                {"account_id": account_id, "reviewed_game_ids": tuple(reviewed_games_id)}
+            ).fetchall()
+
         # if none purchased, use wishlisted
         wishlists = connection.execute(
             sqlalchemy.text(
