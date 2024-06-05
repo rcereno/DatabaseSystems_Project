@@ -90,8 +90,11 @@ def cart_view(cart_id: int):
         "checked_out": checked_out
     }
 
+class CartItem(BaseModel):
+    sku: str
+
 @router.post("/{cart_id}/items/{item_sku}")
-def set_item_quantity(cart_id: int, item_sku: str):
+def set_item_quantity(cart_id: int, item: CartItem):
     """ """
 
     with db.engine.begin() as connection:
@@ -107,26 +110,26 @@ def set_item_quantity(cart_id: int, item_sku: str):
                 ),
                 {
                     "cart_id": cart_id,
-                    "item_sku": item_sku
+                    "item_sku": item.sku
                 }
             )
 
-            connection.execute(sqlalchemy.text(
-                """
-                UPDATE carts 
-                SET total_cost = total_cost + (
-                    SELECT price_in_cents
-                    FROM games
-                    WHERE item_sku = :item_sku
-                ),
-                total_games = total_games + 1
-                WHERE carts.id = :cart_id
-                """
-            ),
-            {
-                "item_sku": item_sku,
-                "cart_id": cart_id
-            })
+            # connection.execute(sqlalchemy.text(
+            #     """
+            #     UPDATE carts 
+            #     SET total_cost = total_cost + (
+            #         SELECT price_in_cents
+            #         FROM games
+            #         WHERE item_sku = :item_sku
+            #     ),
+            #     total_games = total_games + 1
+            #     WHERE carts.id = :cart_id
+            #     """
+            # ),
+            # {
+            #     "item_sku": item.sku,
+            #     "cart_id": cart_id
+            # })
 
         except IntegrityError:
             print("Game already in cart")
@@ -190,7 +193,7 @@ def checkout(cart_id: int):
                 sqlalchemy.text(
                     """
                     SELECT total_games, total_cost
-                    FROM carts
+                    FROM cart_values_view
                     WHERE id = :cart_id
                     """
                 ),

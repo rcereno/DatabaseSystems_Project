@@ -111,9 +111,8 @@ def account_view(account_id: int):
             current_cart_id = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT id FROM carts
-                WHERE carts.account_id = :account_id AND carts.checked_out = FALSE
-                ORDER BY created_at DESC
+                SELECT current_cart FROM accounts
+                WHERE accounts.id = :account_id 
                 """
             ),
              [{
@@ -132,9 +131,9 @@ def account_view(account_id: int):
         cart_items_results = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT COUNT(game_id), SUM(cost)
-                FROM cart_items
-                WHERE cart_items.cart_id = :cart_id
+                SELECT total_games, total_cost
+                FROM cart_values_view
+                WHERE cart_id = :cart_id
                 """
             ),
              [{
@@ -222,6 +221,8 @@ def add_review(account_id: int, game_sku: str, review: Review):
                 "msg": "Game successfully reviewed."
             }
 
+class WishlistItem(BaseModel):
+    sku: str
 
 @router.post("/{account_id}/wishlist/{game_sku}")
 def add_to_wishlist(account_id: int, game_sku: str):
