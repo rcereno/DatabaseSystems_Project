@@ -12,7 +12,7 @@ Let's say two users, Henry and Hamilton, are simultaneously trying to check out 
 4. Hamilton, unaware of Henry's changes, also updates the cart status to "checked out" and completes the checkout process.
 5. Hamilton's update overwrites Henry's changes, resulting in a lost update.
 
-**Sequence Diagram: still making it in progress**
+**Sequence Diagram:**
 ```mermaid
 sequenceDiagram  
     participant Henry
@@ -48,9 +48,9 @@ Yelizaveta's transaction reads the account balance as $1000.
 Christa's transaction updates the account balance to $1500 and commits the changes.
 Yelizaveta's transaction reads the account balance again, expecting to see $1000, but instead retrieves the updated balance of $1500.
 
-**Sequence Diagram (with Solution):**
+**Sequence Diagram:**
 ```mermaid 
-sequenceDiagram  
+sequenceDiagram
     participant Yelizaveta
     participant Database
     participant Christa
@@ -86,9 +86,9 @@ Noah commits his transaction, making the new task visible to others.
 Liam's transaction queries the task list again, expecting to see the same set of tasks as before.
 However, Liam's transaction now retrieves the updated task list, which includes the newly added task by Noah.
 
-**Sequence Diagram (with Solution):**
+**Sequence Diagram:**
 ```mermaid
-sequenceDiagram  
+sequenceDiagram
     participant Liam
     participant Database
     participant Noah
@@ -104,5 +104,5 @@ sequenceDiagram
     Database->>Liam: Return task list (Tasks: A, B, C)
 ```
 
-**Solution: **
+**Solution:**
 To prevent phantom reads, you can use the SERIALIZABLE isolation level for Liam's transaction. This ensures that Liam's transaction sees a consistent snapshot of the data and prevents other transactions from introducing new rows that would affect Liam's transaction. 
