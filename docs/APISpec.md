@@ -92,7 +92,7 @@ Handles the checkout process for a specific cart.
 }
 ```
 
-### 5. Cart View - `/carts/{cart_id}` (GET)
+### 5. Cart View - `/carts/{account_id}/{cart_id}` (GET)
 
 View current cart of the customer.
 
@@ -174,6 +174,14 @@ A call customers can make to register their account.
 ### 8. Add to wishlist- `/account/{account_id}/wishlist/{game_sku}` (PUT)
 
 An API call that allows a customer to add a specific game to their account wishlist.
+
+**Request**:
+
+```json
+{
+  "sku": "string"
+}
+````
 
 **Reponse**
 

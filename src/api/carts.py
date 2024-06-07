@@ -125,23 +125,7 @@ def set_item_quantity(cart_id: int, item: CartItem):
                 }
             )
 
-            # connection.execute(sqlalchemy.text(
-            #     """
-            #     UPDATE carts 
-            #     SET total_cost = total_cost + (
-            #         SELECT price_in_dollars
-            #         FROM games
-            #         WHERE item_sku = :item_sku
-            #     ),
-            #     total_games = total_games + 1
-            #     WHERE carts.id = :cart_id
-            #     """
-            # ),
-            # {
-            #     "item_sku": item.sku,
-            #     "cart_id": cart_id
-            # })
-
+           
         except IntegrityError:
             print("Game already in cart")
             return "OK"
