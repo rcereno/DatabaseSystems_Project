@@ -64,10 +64,30 @@ class search_sort_options(str, Enum):
     publisher = "publisher"
     price = "price"
     genre = "genre"
-    platform = "platform"
+    # platform = "platform"
     avg_review = "review"
     release_date = "release_date"
-    family_rating = "family_rating"
+    # family_rating = "family_rating"
+
+class family_rating_options(str, Enum):
+    E = "E"
+    E10 = "E10"
+    T = "T"
+    M = "M"
+    A0 = "A0"
+
+class platform_options(str, Enum):
+    PlayStation = "PlayStation"
+    PC = "PC"
+    Xbox = "Xbox"
+    Nintendo = "Nintendo"
+
+class review_options(int, Enum):
+    one = 1
+    two = 2
+    three = 3
+    four = 4
+    five = 5
 
 class search_sort_order(str, Enum):
     asc = "asc"
@@ -77,6 +97,13 @@ class search_sort_order(str, Enum):
 @router.get("/catalog/search/", tags=["search"])
 def search_catalog(
     game_sku: str = "",
+    game_name: str = "",
+    publisher: str = "",
+    price: int = None,
+    genre: str = "",
+    platform: platform_options = None,
+    review: review_options = None,
+    rating: family_rating_options = None,
     search_page: str = "",
     sort_col: search_sort_options = search_sort_options.release_date,
     sort_order: search_sort_order = search_sort_order.desc):
@@ -84,32 +111,58 @@ def search_catalog(
     # selecting all the attributes we want to return back to the user later
     query = (
             sqlalchemy.select(
-                db.games.c.item_sku,
-                db.games.c.name,
-                db.games.c.price_in_dollars,
-                db.games.c.publisher,
-                db.games.c.platform,
-                db.games.c.genre,
-                db.games.c.family_rating,
-                db.games.c.release_date
-            ).select_from(db.games))
+                db.game_catalog.c.item_sku,
+                db.game_catalog.c.name,
+                db.game_catalog.c.price_in_dollars,
+                db.game_catalog.c.publisher,
+                db.game_catalog.c.platform,
+                db.game_catalog.c.genre,
+                db.game_catalog.c.family_rating,
+                db.game_catalog.c.release_date,
+                db.game_catalog.c.review
+            ).select_from(db.game_catalog))
     with db.engine.begin() as connection:
-        if game_sku:
-            query = query.where(db.games.c.item_sku.ilike(f"{game_sku}"))
+        if game_sku != "":
+            query = query.where(db.game_catalog.c.item_sku.ilike(f"%{game_sku}%"))
+        if game_name != "":
+            query = query.where(db.game_catalog.c.name.ilike(f"%{game_name}%"))
+        if publisher != "":
+            query = query.where(db.game_catalog.c.publisher.ilike(f"%{publisher}%"))
+        if genre != "":
+            query = query.where(db.game_catalog.c.genre.ilike(f"%{genre}%"))
+        if platform:
+            query = query.where(db.game_catalog.c.platform == platform)
+        if rating:
+            query = query.where(db.game_catalog.c.family_rating == rating)
+
+        if price:
+            if price  > 0  and price < 150:
+                query = query.where(db.game_catalog.c.price_in_dollars <= price)
+            elif price <= 0: #Don't run filter if 150 or above, error out if less than 0 
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Invalid price")
+        
+        if review:
+            query = query.where((db.game_catalog.c.review >= review) if game_catalog.c.review != -1 else "NOT YET REVIEWED")
+
+        # if review > 1 and review <= 5:
+        #     query = query.where((db.game_catalog.c.review >= review) if game_catalog.c.review != -1 else "NOT YET REVIEWED")
+        # elif review != 1: #Don't run sort filter if review is 1, error out otherwise
+        #     raise HTTPException(
+        #         status_code=status.HTTP_404_NOT_FOUND, detail="Invalid review number")
+                            
         # map sort options to corresponding column
         sort_columns = {
-            search_sort_options.game_name: db.games.c.name,
-            search_sort_options.sku: db.games.c.item_sku,
-            search_sort_options.price: db.games.c.price_in_dollars,
-            search_sort_options.publisher: db.games.c.publisher,
-            search_sort_options.platform: db.games.c.platform,
-            # search_sort_options.mode_review: games.c.mode_review,  # EDIT THIS
-            search_sort_options.genre: db.games.c.genre,
-            search_sort_options.family_rating: db.games.c.family_rating,
-            search_sort_options.release_date: db.games.c.release_date,
+            search_sort_options.game_name: db.game_catalog.c.name,
+            search_sort_options.sku: db.game_catalog.c.item_sku,
+            search_sort_options.price: db.game_catalog.c.price_in_dollars,
+            search_sort_options.publisher: db.game_catalog.c.publisher,
+            search_sort_options.avg_review: db.game_catalog.c.review,  # EDIT THIS
+            search_sort_options.genre: db.game_catalog.c.genre,
+            search_sort_options.release_date: db.game_catalog.c.release_date,
         }
         # get column for sorting based on dictionary
-        order_by = sort_columns.get(sort_col, db.games.c.release_date)
+        order_by = sort_columns.get(sort_col, db.game_catalog.c.release_date)
         # getting sort order
         if sort_order == search_sort_order.asc:
             query = query.order_by(order_by.asc())
@@ -135,7 +188,7 @@ def search_catalog(
                     "price": row.price_in_dollars,
                     "publisher": row.publisher,
                     "platform": row.platform,
-                    "mode_review": 0,  # EDIT THIS
+                    "review": (row.review if row.review != -1 else "NOT YET REVIEWED"),  # EDIT THIS
                     "genre": row.genre,
                     "family_rating": row.family_rating,
                     "release_date": row.release_date
@@ -156,8 +209,13 @@ def search_catalog(
         }
         return response
 
+class time_unit(str, Enum):
+    day = "day"
+    week = "week"
+    month = "month"
+
 @router.get("/catalog/trending/", tags=["catalog"])
-def trending_catalog(time_unit: str = "day"):
+def trending_catalog(time_unit: time_unit = "day"):
     """Retrieves the recently trending games based on recent reviews."""
     number_of_days = 0
 

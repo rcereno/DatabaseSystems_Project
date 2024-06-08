@@ -455,10 +455,16 @@ def recommend_game(account_id: int):
             random_games_stmt = """
                 SELECT item_sku, name, publisher, price_in_dollars, genre, platform, family_rating, release_date
                 FROM games
-                WHERE id NOT IN :exclude_game_ids
+            """
+
+            if len(exclude_game_ids) > 0:
+                random_games_stmt += "\n WHERE id NOT IN :exclude_game_ids "
+            
+            random_games_stmt += """
                 ORDER BY RANDOM()
                 LIMIT 5
             """
+
             # exclude games that they already own or have wishlisted
             random_games = connection.execute(sqlalchemy.text(random_games_stmt), {"exclude_game_ids": tuple(exclude_game_ids)}).fetchall()
             return {"recommendations": format_game_recommendations(random_games)}
@@ -472,8 +478,16 @@ def recommend_game(account_id: int):
         all_games_stmt = """
             SELECT item_sku, name, publisher, price_in_dollars, genre, platform, family_rating, release_date, id
             FROM games
-            WHERE id NOT IN :exclude_game_ids
         """
+
+        if len(exclude_game_ids) > 0:
+            all_games_stmt += "\n WHERE id NOT IN :exclude_game_ids "
+        
+        all_games_stmt += """
+            ORDER BY RANDOM()
+            LIMIT 5
+        """
+
         all_games = connection.execute(sqlalchemy.text(all_games_stmt), {"exclude_game_ids": tuple(exclude_game_ids)}).fetchall()
          # Calculate preference scores by adding them all together
         def calculate_preference_score(game):

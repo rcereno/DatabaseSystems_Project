@@ -16,3 +16,6 @@ cart_items = sqlalchemy.Table("cart_items", metadata_obj, autoload_with=engine)
 wishlisted = sqlalchemy.Table("wishlisted", metadata_obj, autoload_with=engine)
 purchased = sqlalchemy.Table("purchases", metadata_obj, autoload_with=engine)
 games = sqlalchemy.Table("games", metadata_obj, autoload_with=engine)
+
+metadata_obj.reflect(bind=engine, views=True)
+game_catalog = sqlalchemy.Table("game_catalog", metadata_obj, autoload_with=engine)
